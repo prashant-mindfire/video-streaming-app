@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import process from 'process';
 import express from 'express';
-import logger from './utils/logger';
+import logger from './utils/logger.ts';
 
 dotenv.config();
 
