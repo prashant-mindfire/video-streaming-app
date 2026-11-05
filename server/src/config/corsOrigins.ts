@@ -1,7 +1,4 @@
-import dotenv from 'dotenv';
 import type { CorsOptions } from 'cors';
-
-dotenv.config({ path: '../../../.env' });
 
 const allowedOrigins: string[] = [
     ...(process.env.ALLOWED_ORIGINS?.split(',') || []),
