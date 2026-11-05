@@ -1,8 +1,5 @@
-import swaggerJsDoc, { type SwaggerDefinition } from 'swagger-jsdoc'
-import swaggerUi from 'swagger-ui-express'
-import dotenv from 'dotenv';
-
-dotenv.config({ path: '../../../.env' });
+import swaggerJsDoc, { type SwaggerDefinition } from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
 
 const swaggerOptions: swaggerJsDoc.Options = {
     definition: {
