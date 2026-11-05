@@ -1,64 +1,62 @@
-import { Request, Response, NextFunction } from "express";
-import * as authService from "../services/auth.service";
+import type { Request, Response } from "express";
+import * as AuthService from "../services/auth.service";
+import { responseHandler } from "@/utils/responseHandler";
+import type { LoginUserInput, RegisterUserInput } from "@/schemas/auth.schema";
+import { AppError } from "@/utils/app.error";
+
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as const,
+  path: "/",
+};
 
 export const registerUser = async (
-  req: Request,
+  req: Request<{}, {}, RegisterUserInput>,
   res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { name, email, password } = req.body;
+): Promise<void> => {
+  const { name, email, password, role } = req.body;
 
-    const user = await authService.registerUser(
-      name,
-      email,
-      password
-    );
+  const user = await AuthService.registerUser(
+    name,
+    email,
+    password,
+    role
+  );
 
-    return res.status(201).json({
-      success: true,
-      message: "User registered successfully",
-      data: user,
-    });
-  } catch (error) {
-    next(error);
-  }
+  responseHandler(res, 201, "User registered successfully", { user });
 };
 
 export const loginUser = async (
-  req: Request,
+  req: Request<{}, {}, LoginUserInput>,
   res: Response,
-  next: NextFunction
-) => {
-  try {
-    const validation = loginSchema.safeParse(req.body);
+): Promise<void> => {
+    const { email, password } = req.body;
 
-    if (!validation.success) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: validation.error.flatten().fieldErrors,
-      });
-    }
-
-    const { email, password } = validation.data;
-
-    const result = await authService.loginUser(email, password);
+    const result = await AuthService.loginUser(email, password);
 
     res.cookie("session", result.token, {
       ...cookieOptions,
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    return res.status(201).json({
-      success: true,
-      message: "Login successful",
-      data: {
-        user: result.user,
-        session: result.session,
-      },
+    responseHandler(res, 200, "Login successful", {
+      user: result.user,
+      session: result.session,
     });
-  } catch (error) {
-    next(error);
-  }
+};
+
+export const logoutUser = async (
+  req: Request,
+  res: Response,
+) => {
+    if (!req.auth) {
+      throw new AppError("Unauthorized context missing", 401);
+    }
+    const { sessionId } = req.auth;
+
+    await AuthService.logoutUser(sessionId);
+    res.clearCookie("session", cookieOptions);
+
+    responseHandler(res, 200, "Logout successful", {});
 };

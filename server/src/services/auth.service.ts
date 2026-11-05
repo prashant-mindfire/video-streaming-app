@@ -1,27 +1,34 @@
 import bcrypt from "bcryptjs";
-import * as authRepository from "../repositories/auth.repository";
+import * as AuthRepository from "../repositories/auth.repository";
+import type { User, UserRole } from "@/models/user.model";
+import { AppError } from "@/utils/app.error";
+import { generateToken } from "@/utils/jwt";
+import { comparePassword } from "@/utils/password";
+import { SESSION_DURATION_DAYS } from "@/utils/constants";
 
 export const registerUser = async (
   name: string,
   email: string,
-  password: string
-) => {
+  password: string,
+  role: UserRole
+): Promise<User> => {
   const normalizedEmail = email.trim().toLowerCase();
 
-  const existingUser = await authRepository.findUserByEmail(
+  const existingUser = await AuthRepository.findUserByEmail(
     normalizedEmail
   );
 
   if (existingUser) {
-    throw new Error("EMAIL_ALREADY_EXISTS");
+    throw new AppError("Email address is already registered", 400);
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
 
-  const user = await authRepository.createUser({
+  const user = await AuthRepository.createUser({
     name: name.trim(),
     email: normalizedEmail,
     password_hash: passwordHash,
+    role,
   });
 
   return user;
@@ -33,12 +40,12 @@ export const loginUser = async (
 ) => {
   const normalizedEmail = email.trim().toLowerCase();
 
-  const user = await authRepository.findUserByEmail(
+  const user = await AuthRepository.findUserByEmail(
     normalizedEmail
   );
 
   if (!user) {
-    throw new AppError(401, "Invalid email or password");
+    throw new AppError("Invalid email or password", 401);
   }
 
   const isPasswordValid = await comparePassword(
@@ -47,16 +54,14 @@ export const loginUser = async (
   );
 
   if (!isPasswordValid) {
-    throw new AppError(401, "Invalid email or password");
+    throw new AppError("Invalid email or password", 401);
   }
-
-  const sessionId = randomUUID();
 
   const expiresAt = new Date(
     Date.now() + SESSION_DURATION_DAYS * 24 * 60 * 60 * 1000
   );
 
-  const session = await authRepository.createSession(
+  const session = await AuthRepository.createSession(
     user.id,
     expiresAt
   );
@@ -76,4 +81,10 @@ export const loginUser = async (
       expiresAt: session.expires_at,
     },
   };
+};
+
+export const logoutUser = async (
+  sessionId: string
+): Promise<void> => {
+  await AuthRepository.revokeSession(sessionId);
 };
