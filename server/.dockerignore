@@ -3,5 +3,6 @@ npm-debug.log
 dist
 build
 .env
+.dockerignore
 Dockerfile
 logs
