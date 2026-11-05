@@ -6,8 +6,8 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile.dev
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
+    env_file:
+      - .env
     volumes:
       - ./server:/app
       - /app/node_modules
@@ -17,7 +17,9 @@ services:
     depends_on:
       - postgres
       - redis
-      - minio
+      # - minio
+      - rustfs
+      - rustfs_perms
 
   # Frontend    
   client:
@@ -36,8 +38,6 @@ services:
   # PostgreSQL database
   postgres:
     image: postgres:16-alpine
-    env_file:
-      - ./.env
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -55,9 +55,7 @@ services:
 
   # MinIO object storage
   # minio:
-  #   image: alpine/minio:latest-release
-  #   env_file:
-  #     - ./.env
+  #   image: quay.io/minio/minio:latest 
   #   environment:
   #     MINIO_ROOT_USER: ${MINIO_ROOT_USER}
   #     MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
@@ -68,6 +66,39 @@ services:
   #   volumes:
   #     - minio_data:/data
 
+   # RustFs Permission Fixer (Runs once before RustFs starts)
+  rustfs_perms:
+    image: alpine
+    user: root
+    volumes:
+      # Mount the parent root of the volumes so it fixes permissions for both subfolders at once
+      - rustfs_root:/fix_path
+    command: chown -R 10001:10001 /fix_path
+
+  # RustFs object storage
+  rustfs:
+    image: rustfs/rustfs:latest
+    ports:
+      - "9000:9000" # MinIO/S3 API Replacement
+      - "9001:9001" # RustFs Web Console
+    depends_on:
+      rustfs_perms:
+        condition: service_completed_successfully
+    volumes:
+      # Map subdirectories from the same named volume to preserve permissions cleanly
+      - rustfs_root:/data
+      - rustfs_root:/var/log/rustfs/
+    environment:
+      - RUSTFS_ADDRESS=:9000
+      - RUSTFS_CONSOLE_ADDRESS=:9001
+      - RUSTFS_CONSOLE_ENABLE=true
+      - RUSTFS_OBS_LOGGER_LEVEL=error
+      - RUSTFS_OBS_LOG_DIRECTORY=/var/log/rustfs/
+      # Mandatory security credentials required to log in and allow backend access
+      - RUSTFS_ACCESS_KEY=${RUSTFS_ACCESS_KEY}
+      - RUSTFS_SECRET_KEY=${RUSTFS_SECRET_KEY}
+
 volumes:
   pgdata:
   # minio_data:
+  rustfs_root:
