@@ -34,9 +34,9 @@
     "moduleDetection": "force",
     "skipLibCheck": true,
     
-    /* Bundler mode */
-    "allowImportingTsExtensions": true,
-    "noEmit": true,
+    /* bundler mode */
+    "allowImportingTsExtensions": false,
+    "noEmit": false,
     "moduleResolution": "bundler",
     "paths": {
       "@/*": ["./src/*"]
