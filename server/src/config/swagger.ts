@@ -16,15 +16,15 @@ const swaggerOptions: swaggerJsDoc.Options = {
         ],
         components: {
             securitySchemes: {
-                bearerAuth: {
-                    type: 'http',
-                    scheme: 'bearer',
-                    bearerFormat: 'JWT',
+                sessionCookie: {
+                    type: "apiKey",
+                    in: "cookie",
+                    name: "session",
                 },
             },
         },
     } as SwaggerDefinition,
-    apis: ['./src/routes/*.ts'],
+    apis: ['./src/routes/*.ts', './src/docs/openapi/*.ts'],
 }
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions)
