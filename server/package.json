@@ -9,11 +9,15 @@
   "scripts": {
     "start": "tsx --env-file=../.env src/index.ts",
     "dev": "tsx watch --env-file=../.env src/index.ts",
+    "start:docker": "tsx src/index.ts",
+    "dev:docker": "tsx watch src/index.ts",
     "build": "tsc && tsc-alias",
     "prod": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1163.0",
+    "@aws-sdk/s3-request-presigner": "^3.1163.0",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
