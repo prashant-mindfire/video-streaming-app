@@ -13,11 +13,11 @@ export const findUserByEmail = async (email: string) => {
 export const createUser = async (user: CreateUserInput) => {
   const result = await pool.query(
     `INSERT INTO users (
-      id, name, email, password_hash
+      id, name, email, role, password_hash
     )
-    VALUES (gen_random_uuid(), $1, $2, $3)
+    VALUES (gen_random_uuid(), $1, $2, $3, $4)
     RETURNING id, name, email, role, created_at`,
-    [user.name, user.email, user.password_hash]
+    [user.name, user.email, user.role, user.password_hash]
   );
 
   return result.rows[0];
