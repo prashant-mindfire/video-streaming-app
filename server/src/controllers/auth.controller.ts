@@ -3,13 +3,8 @@ import * as AuthService from "../services/auth.service";
 import { responseHandler } from "@/utils/responseHandler";
 import type { LoginUserInput, RegisterUserInput } from "@/schemas/auth.schema";
 import { AppError } from "@/utils/app.error";
-
-const cookieOptions = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax" as const,
-  path: "/",
-};
+import { cookieOptions } from "@/utils/cookie";
+import { SESSION_DURATION_DAYS } from "@/utils/constants";
 
 export const registerUser = async (
   req: Request<{}, {}, RegisterUserInput>,
@@ -37,7 +32,7 @@ export const loginUser = async (
 
     res.cookie("session", result.token, {
       ...cookieOptions,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: SESSION_DURATION_DAYS * 24 * 60 * 60 * 1000,
     });
 
     responseHandler(res, 200, "Login successful", {
