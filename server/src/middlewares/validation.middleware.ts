@@ -13,8 +13,20 @@ export const validateRequest = (schema: ZodObject) => {
       
       // Overwrite Express objects with fully sanitized/parsed data
       req.body = parsed.body;
-      req.query = parsed.query as Request['query'];
-      req.params = parsed.params as Request['params'];
+
+      if (parsed.query) {
+        Object.getOwnPropertyNames(req.query).forEach(key => {
+          Object.defineProperty(req.query, key, { value: undefined, writable: true, configurable: true });
+        });
+        Object.assign(req.query, parsed.query);
+      }
+
+      if (parsed.params) {
+        Object.getOwnPropertyNames(req.params).forEach(key => {
+          Object.defineProperty(req.params, key, { value: undefined, writable: true, configurable: true });
+        });
+        Object.assign(req.params, parsed.params);
+      }
       
       // Move cleanly to the controller
       return next();
