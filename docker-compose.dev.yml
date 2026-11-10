@@ -2,38 +2,66 @@
 
 services:
   # Backend
-  server:
-    build:
+  # server:
+  #   build:
+  #     context: ./server
+  #     dockerfile: Dockerfile.dev
+  #   env_file:
+  #     - .env
+  #   volumes:
+  #     - ./server:/app
+  #     - /app/node_modules
+  #   command: npm run dev:docker
+  #   ports:
+  #     - "5000:5000"
+  #   depends_on:
+  #     - postgres
+  #     - redis
+  #     # - minio
+  #     - rustfs
+
+  # Frontend    
+  # client:
+  #   build:
+  #     context: ./client
+  #     dockerfile: Dockerfile.dev
+  #   volumes:
+  #     - ./client:/app
+  #     - /app/node_modules
+  #   command: npm run dev
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - server
+
+  outbox:
+    build: 
       context: ./server
       dockerfile: Dockerfile.dev
+    volumes:  
+      - ./server:/app
+      - /app/node_modules
+    command: npm run dev:outbox
     env_file:
-      - .env
+      - ./.env
+    depends_on:
+      - postgres
+      - rabbitmq
+
+  worker:
+    build: 
+      context: ./server
+      dockerfile: Dockerfile.dev
     volumes:
       - ./server:/app
       - /app/node_modules
-    command: npm run dev
-    ports:
-      - "5000:5000"
+    command: npm run dev:worker
+    env_file:
+      - ./.env
     depends_on:
       - postgres
-      - redis
-      # - minio
+      - rabbitmq
       - rustfs
-      - rustfs_perms
-
-  # Frontend    
-  client:
-    build:
-      context: ./client
-      dockerfile: Dockerfile.dev
-    volumes:
-      - ./client:/app
-      - /app/node_modules
-    command: npm run dev
-    ports:
-      - "3000:3000"
-    depends_on:
-      - server
   
   # PostgreSQL database
   postgres:
@@ -46,6 +74,26 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    restart: unless-stopped
+    ports:
+      # AMQP protocol port (used by applications to send/receive messages)
+      - "5672:5672"
+      # Management UI web console port
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    volumes:
+      # Persists RabbitMQ data so it survives container restarts
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   # Redis in-memory cache
   redis:
@@ -100,5 +148,7 @@ services:
 
 volumes:
   pgdata:
+    external: true
+  rabbitmq_data:
   # minio_data:
   rustfs_root:
