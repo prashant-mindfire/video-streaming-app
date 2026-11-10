@@ -22,3 +22,7 @@ export const ALLOWED_CONTENT_TYPES = [
 ];
 
 export const MAX_PARTS = 10000;
+
+export const INITIAL_BATCH_SIZE = Number(
+  process.env.UPLOAD_INITIAL_BATCH_SIZE || 5
+);

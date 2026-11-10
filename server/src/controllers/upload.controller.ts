@@ -2,16 +2,17 @@ import type { InitiateUploadInput } from "@/schemas/upload.schema";
 import * as UploadService from "@/services/upload.service";
 import { AppError } from "@/utils/app.error";
 import { responseHandler } from "@/utils/responseHandler";
-import type { NextFunction, Request, Response } from "express";
+import type { Request, Response } from "express";
 
-/**
- * POST /api/v1/videos/uploads
- */
 export const initiateUpload = async (
   req: Request<{}, {}, InitiateUploadInput>,
   res: Response,
 ) => {
     const userId = req.auth?.userId;
+    if (!userId) {
+      throw new AppError("Unauthorized", 401);
+    }
+    
     const { fileName, contentType, fileSize } = req.body;
 
     const result = await UploadService.initiateUpload(
@@ -24,36 +25,44 @@ export const initiateUpload = async (
     });
 };
 
-/**
- * POST /api/v1/videos/uploads/:uploadId/parts/:partNumber/upload-urls
- */
-export const generatePartUploadUrl = async (
+export const generatePartUploadUrls = async (
   req: Request,
   res: Response,
-  next: NextFunction
 ) => {
-  try {
-    const userId = req.auth?.userId;
+  const userId = req.auth?.userId;
 
-    if (!userId) {
-      throw new AppError(401, "Unauthorized");
-    }
-
-    const { uploadId } = req.params;
-    const partNumber = Number(req.params.partNumber);
-
-    const result =
-      await UploadService.generatePartUploadUrl(
-        userId,
-        uploadId,
-        partNumber
-      );
-
-    res.status(200).json({
-      success: true,
-      data: result,
-    });
-  } catch (error) {
-    next(error);
+  if (!userId) {
+    throw new AppError("Unauthorized", 401);
   }
+
+  const { uploadId } = req.params;
+  const { partNumbers } = req.body;
+
+  const result =
+    await UploadService.generatePartUploadUrls(
+      userId,
+      uploadId as string,
+      partNumbers
+    );
+
+  responseHandler(res, 200, "Part upload URLs generated successfully", {
+      data: result
+  });
+};
+
+export const completeUpload = async (
+  req: Request,
+  res: Response,
+) => {
+  const { parts } = req.body;
+
+  const result = await UploadService.completeUpload(
+    req.auth!.userId,
+    req.params.uploadId,
+    parts
+  );
+
+  responseHandler(res, 200, "Video uploaded successfully", {
+    data: result
+  });
 };

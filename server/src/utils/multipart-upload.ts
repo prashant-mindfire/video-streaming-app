@@ -1,6 +1,7 @@
-import { s3Client } from "@/config/rustfs";
-import { AbortMultipartUploadCommand, CreateMultipartUploadCommand, UploadPartCommand, type CreateMultipartUploadCommandOutput } from "@aws-sdk/client-s3";
+import { RUSTFS_BUCKET_NAME, s3Client } from "@/config/rustfs";
+import { AbortMultipartUploadCommand, CreateMultipartUploadCommand, ListPartsCommand, UploadPartCommand, type CreateMultipartUploadCommandOutput, type ListPartsCommandOutput } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { PART_SIZE, URL_EXPIRY_SECONDS } from "./constants";
 
 /**
  * Generates a temporary URL to upload a specific part of a chunked file
@@ -19,7 +20,7 @@ export const generatePresignedPartUrl = async (
   });
 
   // Generates a secure link that expires automatically in 15 minutes (900 seconds)
-  const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 900 });
+  const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: URL_EXPIRY_SECONDS });
 
   return presignedUrl;
 };
@@ -53,8 +54,51 @@ export const abortMultipartUpload = async (
   await s3Client.send(command);
 };
 
+export const listParts = async (
+  bucketName: string,
+  objectKey: string,
+  uploadId: string,
+  marker?: string,
+): Promise<ListPartsCommandOutput> => {
+  const command = new ListPartsCommand({
+    Bucket: bucketName,
+    Key: objectKey,
+    UploadId: uploadId,
+    PartNumberMarker: marker,
+  });
+
+  return await s3Client.send(command); 
+};
+
+export const generatePartUrls = async (
+  upload: {
+    object_key: string;
+    multipart_upload_id: string;
+    total_parts: number;
+  },
+  partNumbers: number[]
+) => {
+  return Promise.all(
+    partNumbers.map(async (partNumber) => {
+      const uploadUrl = await generatePresignedPartUrl(RUSTFS_BUCKET_NAME, upload.object_key, upload.multipart_upload_id, partNumber);
+
+      return {
+        partNumber,
+        uploadUrl,
+        expiresIn: URL_EXPIRY_SECONDS,
+      };
+    })
+  );
+};
+
 export const sanitizeFileName = (fileName: string) =>
   fileName
     .replace(/[/\\]/g, "_")
     .replace(/[^\w.\-() ]/g, "_")
     .slice(0, 200);
+
+export const getTotalParts = (fileSize: number) =>
+  Math.ceil(fileSize / PART_SIZE);
+
+export const getPartNumbers = (totalParts: number) =>
+  Array.from({ length: totalParts }, (_, index) => index + 1);

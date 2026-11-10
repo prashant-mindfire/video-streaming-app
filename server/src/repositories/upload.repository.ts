@@ -1,5 +1,6 @@
 import { pool } from "@/config/db";
-import type { CreateUploadRecordInput, VideoUpload } from "@/models/upload.model";
+import type { CreateUploadRecordInput, UploadStatus, VideoUpload } from "@/models/upload.model";
+import type { PgClient } from "@/utils/withTransaction";
 
 export const createUpload = async (
   data: CreateUploadRecordInput
@@ -61,13 +62,14 @@ export const findUploadByIdAndUserId = async (
 
 export const updateUploadStatus = async (
   uploadId: string,
-  status: string
-) => {
+  status: UploadStatus,
+  client: PgClient = pool
+): Promise<void> => {
   const query = `
     UPDATE video_uploads
     SET status = $2
     WHERE id = $1
   `;
 
-  await pool.query(query, [uploadId, status]);
+  await client.query(query, [uploadId, status]);
 };

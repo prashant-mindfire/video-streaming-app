@@ -1,5 +1,5 @@
 import { loginSchema, registerSchema } from "@/schemas/auth.schema";
-import { initiateUploadSchema } from "@/schemas/upload.schema";
+import { completeUploadSchema, generatePartUrlsSchema, initiateUploadSchema } from "@/schemas/upload.schema";
 import { Router } from "express";
 import * as AuthController from "../controllers/auth.controller";
 import * as UploadController from "../controllers/upload.controller";
@@ -19,8 +19,8 @@ router.get("/users/me", AuthMiddleware.authenticate, UserController.getCurrentUs
 
 // // Uploads
 router.post("/videos/uploads", [AuthMiddleware.authenticate, ValidationMiddleware.validateRequest(initiateUploadSchema)], UploadController.initiateUpload);
-// router.post("/videos/uploads/:uploadId/parts/:partNumber/upload-urls", authenticate, uploadController.getUploadPartUrl);
-// router.post("/videos/uploads/:uploadId/completion", authenticate, uploadController.completeUpload);
+router.post("/uploads/:uploadId/parts/upload-urls", [AuthMiddleware.authenticate, ValidationMiddleware.validateRequest(generatePartUrlsSchema)], UploadController.generatePartUploadUrls);
+router.post("/videos/uploads/:uploadId/completion", [AuthMiddleware.authenticate, ValidationMiddleware.validateRequest(completeUploadSchema)], UploadController.completeUpload);
 // router.get("/videos/uploads/:uploadId", authenticate, uploadController.getUploadStatus);
 
 // // Videos

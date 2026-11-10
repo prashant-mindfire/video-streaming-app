@@ -1,3 +1,12 @@
+export enum UploadStatus {
+  INITIATED = 'initiated',
+  UPLOADING = 'uploading',
+  COMPLETED = 'completed',
+  ABORTED = 'aborted',
+  FAILED = 'failed',
+  EXPIRED = 'expired'
+}
+
 export interface InitiateUploadInput {
   fileName: string;
   contentType: string;
@@ -27,6 +36,6 @@ export interface VideoUpload {
   content_type: string;
   part_size: string;
   total_parts: number;
-  status: string;
+  status: UploadStatus;
   expires_at: Date | null;
 }
