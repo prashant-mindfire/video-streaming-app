@@ -7,6 +7,7 @@ import corsOrigins from './config/corsOrigins';
 import router from './routes/router';
 import { swaggerDocs, swaggerUi } from './config/swagger';
 import { errorHandler } from './middlewares/error.middleware';
+import { notFoundErrorHandler } from './middlewares/notFound.middleware';
 
 const app = express();
 
@@ -20,10 +21,15 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 app.use(`/api/${process.env.API_VERSION}`, router);
 
+app.use(notFoundErrorHandler);
+
 app.use(errorHandler);
 
 connectDB().then(() => {
-    app.listen(PORT, () => logger.info(`Server running on port ${PORT}`));
+    app.listen(PORT, () => {
+        logger.info(`Server listening on port ${PORT}`);
+        logger.info(`Swagger Docs: http://localhost:${PORT}/api-docs`);
+    });
 });
 
 export default app;
