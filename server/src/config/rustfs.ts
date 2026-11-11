@@ -10,4 +10,6 @@ export const s3Client = new S3Client({
   },
   region: process.env.RUSTFS_REGION as string,
   forcePathStyle: true, 
+  requestChecksumCalculation: "WHEN_REQUIRED",
+  responseChecksumValidation: "WHEN_REQUIRED"
 });
