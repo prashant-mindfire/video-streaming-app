@@ -55,10 +55,11 @@ export const completeUpload = async (
   res: Response,
 ) => {
   const { parts } = req.body;
+  const { uploadId } = req.params;
 
   const result = await UploadService.completeUpload(
     req.auth!.userId,
-    req.params.uploadId,
+    uploadId as string,
     parts
   );
 
