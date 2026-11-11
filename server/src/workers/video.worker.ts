@@ -1,5 +1,5 @@
 import type { VideoProcessingMessage } from "@/types/processing";
-import { connectRabbitMQ, getRabbitMQChannel } from "../config/rabbitmq";
+import { connectRabbitMQ, getRabbitMQConsumerChannel } from "../config/rabbitmq";
 import { processVideo } from "./video.processor";
 import { pool } from "@/config/db";
 import logger from "@/utils/logger";
@@ -9,7 +9,7 @@ const MAX_ATTEMPTS = 3;
 export const startVideoWorker = async () => {
   await connectRabbitMQ();
 
-  const channel = getRabbitMQChannel();
+  const channel = getRabbitMQConsumerChannel();
 
   logger.info("Video worker started. Waiting for jobs...");
 
@@ -133,3 +133,5 @@ export const startVideoWorker = async () => {
     { noAck: false }
   );
 };
+
+startVideoWorker().catch((error) => logger.error("Something went wrong in start video worker:", error));

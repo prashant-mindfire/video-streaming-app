@@ -1,4 +1,5 @@
 import type { VideoMetadata } from "@/types/processing";
+import { RESOLUTION_DIMENSIONS } from "@/utils/constants";
 import { spawn } from "child_process";
 import { mkdir } from "fs/promises";
 import path from "path";
@@ -50,7 +51,7 @@ export const extractMetadata = async (
   }
 
   return {
-    duration: Number(data.format?.duration || 0),
+    duration: Math.round(Number(data.format?.duration || 0)),
     width: Number(videoStream.width || 0),
     height: Number(videoStream.height || 0),
     codec: videoStream.codec_name || "unknown",
@@ -80,14 +81,14 @@ export const transcodeToHls = async (
 ) => {
   await mkdir(outputDirectory, { recursive: true });
 
-  const targetHeight = Number(resolution.replace("p", ""));
+  const { maxWidth, maxHeight } = RESOLUTION_DIMENSIONS[resolution];
   const outputPlaylist = path.join(outputDirectory, "index.m3u8");
 
   await runCommand("ffmpeg", [
     "-y",
     "-i", inputPath,
     "-vf",
-    `scale=w='min(${width},1280)':h='min(${height},${targetHeight})':force_original_aspect_ratio=decrease`,
+    `scale=w='min(${width},${maxWidth})':h='min(${height},${maxHeight})':force_original_aspect_ratio=decrease:force_divisible_by=2`,
     "-c:v", "libx264",
     "-preset", "veryfast",
     "-crf", "23",

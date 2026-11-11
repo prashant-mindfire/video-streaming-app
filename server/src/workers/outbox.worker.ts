@@ -33,13 +33,18 @@ export const publishOutboxEvents = async (): Promise<void> => {
 
             if (!published) {
                 throw new Error("RabbitMQ write buffer is full");
-            }
+            }           
+        }
 
+        await channel.waitForConfirms();
+
+        const eventIds = result.rows.map((e) => e.id);
+        if (eventIds.length > 0) {
             await client.query(
                 `UPDATE outbox_events
-                    SET published_at = NOW()
-                    WHERE id = $1`,
-                [event.id]
+                SET status = 'published', published_at = NOW()
+                WHERE id = ANY($1::uuid[])`,
+                [eventIds]
             );
         }
     });

@@ -267,7 +267,7 @@ export const completeUpload = async (
 
     const jobId = await JobRepository.createVideoProcessingJob(client, videoId);
 
-    await OutboxRepository.insertOutboxEvent(client, "video.processing.requested", {
+    await OutboxRepository.insertOutboxEvent(client, "video.processing.requested", jobId, {
       jobId,
       videoId,
       userId,

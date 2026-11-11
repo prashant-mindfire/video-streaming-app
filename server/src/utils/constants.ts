@@ -26,3 +26,11 @@ export const MAX_PARTS = 10000;
 export const INITIAL_BATCH_SIZE = Number(
   process.env.UPLOAD_INITIAL_BATCH_SIZE || 5
 );
+
+export const RESOLUTION_DIMENSIONS = {
+  "1080p": { maxWidth: 1920, maxHeight: 1080 },
+  "720p": { maxWidth: 1280, maxHeight: 720 },
+  "480p": { maxWidth: 854, maxHeight: 480 },
+};
+
+export const RETRY_PROCESSING_JOB_STATUS = ["failed", "dead_lettered"];
