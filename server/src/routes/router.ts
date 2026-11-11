@@ -1,4 +1,6 @@
+import * as ProcessingJobController from "@/controllers/processing-job.controller";
 import { loginSchema, registerSchema } from "@/schemas/auth.schema";
+import { retryJobParamsSchema } from "@/schemas/processing-job.schema";
 import { completeUploadSchema, generatePartUrlsSchema, initiateUploadSchema } from "@/schemas/upload.schema";
 import { Router } from "express";
 import * as AuthController from "../controllers/auth.controller";
@@ -31,6 +33,9 @@ router.post("/videos/uploads/:uploadId/completion", [AuthMiddleware.authenticate
 // router.post("/videos/:videoId/playback-sessions", authenticate, videoController.createPlaybackSession);
 // router.post("/videos/:videoId/download-links", authenticate, videoController.createDownloadLink);
 // router.delete("/videos/uploads/:uploadId", authenticate, videoController.abortUpload);
+
+// Retry processing job
+router.post("/processing-jobs/:jobId/retries", [AuthMiddleware.authenticate, ValidationMiddleware.validateRequest(retryJobParamsSchema)], ProcessingJobController.retryProcessingJob);
 
 // // Dashboard
 // router.get("/admin/dashboard/overview", authenticate, authorizeAdmin, dashboardController.getDashboardOverview);
