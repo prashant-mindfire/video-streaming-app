@@ -38,4 +38,6 @@ export interface VideoUpload {
   total_parts: number;
   status: UploadStatus;
   expires_at: Date | null;
+  created_at: Date | null;
+  completed_at: Date | null;
 }

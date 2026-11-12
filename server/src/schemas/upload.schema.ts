@@ -31,3 +31,11 @@ export const completeUploadSchema = z.object({
 
 export type CompleteUploadInput = z.infer<typeof completeUploadSchema>['body'];
 
+export const getUploadParamsSchema = z.object({
+    params: z.object({
+        uploadId: z.uuid().min(1, 'uploadId is required'),
+    })
+});
+
+export type GetUploadParamsInput = z.infer<typeof getUploadParamsSchema>['params'];
+
