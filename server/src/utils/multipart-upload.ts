@@ -1,5 +1,5 @@
 import { RUSTFS_BUCKET_NAME, s3Client } from "@/config/rustfs";
-import { AbortMultipartUploadCommand, CreateMultipartUploadCommand, ListPartsCommand, UploadPartCommand, type CreateMultipartUploadCommandOutput, type ListPartsCommandOutput } from "@aws-sdk/client-s3";
+import { AbortMultipartUploadCommand, CreateMultipartUploadCommand, DeleteObjectsCommand, GetObjectCommand, ListObjectsV2Command, ListPartsCommand, UploadPartCommand, type CreateMultipartUploadCommandOutput, type ListPartsCommandOutput } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { PART_SIZE, URL_EXPIRY_SECONDS } from "./constants";
 
@@ -67,7 +67,7 @@ export const listParts = async (
     PartNumberMarker: marker,
   });
 
-  return await s3Client.send(command); 
+  return await s3Client.send(command);
 };
 
 export const generatePartUrls = async (
@@ -90,6 +90,59 @@ export const generatePartUrls = async (
     })
   );
 };
+
+export const deleteVideoObjects = async (
+  userId: string,
+  videoId: string
+) => {
+  const prefix = `videos/${userId}/${videoId}/`;
+
+  let continuationToken: string | undefined;
+
+  do {
+    const result = await s3Client.send(
+      new ListObjectsV2Command({
+        Bucket: RUSTFS_BUCKET_NAME,
+        Prefix: prefix,
+        ContinuationToken: continuationToken,
+      })
+    );
+
+    const objects = result.Contents ?? [];
+
+    if (objects.length > 0) {
+      await s3Client.send(
+        new DeleteObjectsCommand({
+          Bucket: RUSTFS_BUCKET_NAME,
+          Delete: {
+            Objects: objects.map((object) => ({
+              Key: object.Key!,
+            })),
+            Quiet: true,
+          },
+        })
+      );
+    }
+
+    continuationToken = result.NextContinuationToken;
+  } while (continuationToken);
+};
+
+export const downloadVideo = async (objectKey: string, fileName: string): Promise<string> => {
+  const command = new GetObjectCommand({
+    Bucket: RUSTFS_BUCKET_NAME,
+    Key: objectKey,
+    ResponseContentDisposition: `attachment; filename="${fileName}"`,
+  });
+
+  const downloadUrl = await getSignedUrl(
+    s3Client,
+    command,
+    { expiresIn: URL_EXPIRY_SECONDS }
+  );
+
+  return downloadUrl;
+}
 
 export const sanitizeFileName = (fileName: string) =>
   fileName
