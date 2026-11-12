@@ -287,3 +287,27 @@ export const completeUpload = async (
     message: "Upload completed and video processing has been queued",
   };
 };
+
+export const getUpload = async (
+  userId: string,
+  uploadId: string
+) => {
+  const upload = await UploadRepository.findUploadByIdAndUserId(uploadId, userId);
+
+  if (!upload) {
+    throw new AppError("Upload not found", 404);
+  }
+
+  return {
+    uploadId: upload.id,
+    fileName: upload.original_filename,
+    fileSize: Number(upload.file_size),
+    contentType: upload.content_type,
+    partSize: upload.part_size,
+    totalParts: upload.total_parts,
+    status: upload.status,
+    expiresAt: upload.expires_at,
+    completedAt: upload.completed_at,
+    createdAt: upload.created_at,
+  };
+};
