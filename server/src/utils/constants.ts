@@ -14,6 +14,8 @@ export const URL_EXPIRY_SECONDS = Number(
   process.env.UPLOAD_URL_EXPIRY_SECONDS || 900
 );
 
+export const PLAYBACK_TTL_SECONDS = 900;
+
 export const ALLOWED_CONTENT_TYPES = [
   "video/mp4",
   "video/webm",
