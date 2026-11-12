@@ -19,8 +19,9 @@ services:
   #     - redis
   #     # - minio
   #     - rustfs
+  #     - rabbitmq
 
-  # Frontend    
+  # Frontend
   # client:
   #   build:
   #     context: ./client
@@ -34,35 +35,36 @@ services:
   #   depends_on:
   #     - server
 
-  outbox:
-    build: 
-      context: ./server
-      dockerfile: Dockerfile.dev
-    volumes:  
-      - ./server:/app
-      - /app/node_modules
-    command: npm run dev:outbox
-    env_file:
-      - ./.env
-    depends_on:
-      - postgres
-      - rabbitmq
+  # outbox:
+  #   build:
+  #     context: ./server
+  #     dockerfile: Dockerfile.dev
+  #   volumes:
+  #     - ./server:/app
+  #     - /app/node_modules
+  #   command: npm run dev:outbox
+  #   env_file:
+  #     - ./.env
+  #   depends_on:
+  #     - postgres
+  #     - rabbitmq
 
-  worker:
-    build: 
-      context: ./server
-      dockerfile: Dockerfile.dev
-    volumes:
-      - ./server:/app
-      - /app/node_modules
-    command: npm run dev:worker
-    env_file:
-      - ./.env
-    depends_on:
-      - postgres
-      - rabbitmq
-      - rustfs
-  
+  # worker:
+  #   build:
+  #     context: ./server
+  #     dockerfile: Dockerfile.dev
+  #   volumes:
+  #     - ./server:/app
+  #     - /app/node_modules
+  #   command: npm run dev:worker
+  #   env_file:
+  #     - ./.env
+  #   depends_on:
+  #     - postgres
+  #     - rabbitmq
+  #     - rustfs
+  #     - redis
+
   # PostgreSQL database
   postgres:
     image: postgres:16-alpine
@@ -100,10 +102,24 @@ services:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  # Redis insight GUI
+  redisinsight:
+    image: redis/redisinsight:latest
+    ports:
+      - "5540:5540"
+    volumes:
+      - redisinsight_data:/data
+    depends_on:
+      - redis
+    restart: unless-stopped
 
   # MinIO object storage
   # minio:
-  #   image: quay.io/minio/minio:latest 
+  #   image: quay.io/minio/minio:latest
   #   environment:
   #     MINIO_ROOT_USER: ${MINIO_ROOT_USER}
   #     MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
@@ -114,7 +130,7 @@ services:
   #   volumes:
   #     - minio_data:/data
 
-   # RustFs Permission Fixer (Runs once before RustFs starts)
+  # RustFs Permission Fixer (Runs once before RustFs starts)
   rustfs_perms:
     image: alpine
     user: root
@@ -150,5 +166,7 @@ volumes:
   pgdata:
     external: true
   rabbitmq_data:
-  # minio_data:
+  redis_data:
+  redisinsight_data:
   rustfs_root:
+  # minio_data:
