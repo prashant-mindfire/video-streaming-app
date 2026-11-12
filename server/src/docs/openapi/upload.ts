@@ -246,3 +246,76 @@
  *       '409':
  *         description: Upload has already been completed
  */
+
+/**
+ * @openapi
+ * /videos/uploads/{uploadId}:
+ *   get:
+ *     summary: Get upload status
+ *     tags: [Uploads]
+ *     security:
+ *       - sessionCookie: []
+ *     parameters:
+ *       - name: uploadId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       '200':
+ *         description: Video upload fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, message, data]
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: Video upload fetched successfully
+ *                 data:
+ *                   type: object
+ *                   required: [uploadId, fileName, fileSize, contentType, partSize, totalParts, status, expiresAt, completedAt, createdAt]
+ *                   properties:
+ *                     uploadId:
+ *                       type: string
+ *                       format: uuid
+ *                     fileName:
+ *                       type: string
+ *                     fileSize:
+ *                       type: integer
+ *                       format: int64
+ *                     contentType:
+ *                       type: string
+ *                       example: video/mp4
+ *                     partSize:
+ *                       type: string
+ *                       description: Part size in bytes.
+ *                     totalParts:
+ *                       type: integer
+ *                     status:
+ *                       type: string
+ *                       enum: [initiated, uploading, completed, aborted, failed, expired]
+ *                     expiresAt:
+ *                       type: string
+ *                       format: date-time
+ *                       nullable: true
+ *                     completedAt:
+ *                       type: string
+ *                       format: date-time
+ *                       nullable: true
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                       nullable: true
+ *       '400':
+ *         description: Invalid upload ID
+ *       '401':
+ *         description: Authentication required or session invalid
+ *       '404':
+ *         description: Upload not found
+ */
