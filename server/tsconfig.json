@@ -33,7 +33,7 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
-    
+
     /* bundler mode */
     "allowImportingTsExtensions": false,
     "noEmit": false,
@@ -42,5 +42,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }
