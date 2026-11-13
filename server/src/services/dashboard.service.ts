@@ -1,12 +1,12 @@
-import * as DashboardRepository from "@/repositories/dashboard.repository";
-import type { DashboardOverview } from "@/types/dashboard";
-import { AppError } from "@/utils/app.error";
+import * as DashboardRepository from '@/repositories/dashboard.repository';
+import type { DashboardOverview } from '@/types/dashboard';
+import { AppError } from '@/utils/app.error';
 
 export const getDashboardOverview = async (): Promise<DashboardOverview> => {
   const metrics = await DashboardRepository.getDashboardMetrics();
 
   if (!metrics) {
-    throw new AppError("No data found", 400);
+    throw new AppError('No data found', 400);
   }
 
   return {
@@ -36,8 +36,6 @@ export const getDashboardOverview = async (): Promise<DashboardOverview> => {
       totalDownloads: Number(metrics.total_downloads),
     },
 
-    averageProcessingTimeSeconds: Number(
-      metrics.average_processing_time_seconds
-    ),
+    averageProcessingTimeSeconds: Number(metrics.average_processing_time_seconds),
   };
 };

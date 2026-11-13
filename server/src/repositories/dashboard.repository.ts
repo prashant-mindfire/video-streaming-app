@@ -1,5 +1,5 @@
-import { pool } from "@/config/db";
-import type { DashboardMetricsRow } from "@/models/dashboard.model";
+import { pool } from '@/config/db';
+import type { DashboardMetricsRow } from '@/models/dashboard.model';
 
 export const getDashboardMetrics = async (): Promise<DashboardMetricsRow | undefined> => {
   const result = await pool.query<DashboardMetricsRow>(`

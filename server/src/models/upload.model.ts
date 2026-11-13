@@ -4,7 +4,7 @@ export enum UploadStatus {
   COMPLETED = 'completed',
   ABORTED = 'aborted',
   FAILED = 'failed',
-  EXPIRED = 'expired'
+  EXPIRED = 'expired',
 }
 
 export interface InitiateUploadInput {

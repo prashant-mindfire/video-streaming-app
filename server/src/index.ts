@@ -11,7 +11,7 @@ import { notFoundErrorHandler } from './middlewares/notFound.middleware';
 
 const app = express();
 
-const PORT = process.env.PORT || 3500
+const PORT = process.env.PORT || 3500;
 
 app.use(cors(corsOrigins));
 app.use(cookieParser());
@@ -27,10 +27,10 @@ app.use(notFoundErrorHandler);
 app.use(errorHandler);
 
 connectDB().then(() => {
-    app.listen(PORT, () => {
-        logger.info(`Server listening on port ${PORT}`);
-        logger.info(`Swagger Docs: http://localhost:${PORT}/api-docs`);
-    });
+  app.listen(PORT, () => {
+    logger.info(`Server listening on port ${PORT}`);
+    logger.info(`Swagger Docs: http://localhost:${PORT}/api-docs`);
+  });
 });
 
 export default app;

@@ -1,10 +1,8 @@
-import { pool } from "@/config/db";
-import type { CreateUploadRecordInput, UploadStatus, VideoUpload } from "@/models/upload.model";
-import type { PgClient } from "@/utils/withTransaction";
+import { pool } from '@/config/db';
+import type { CreateUploadRecordInput, UploadStatus, VideoUpload } from '@/models/upload.model';
+import type { PgClient } from '@/utils/withTransaction';
 
-export const createUpload = async (
-  data: CreateUploadRecordInput
-) => {
+export const createUpload = async (data: CreateUploadRecordInput) => {
   const query = `
     INSERT INTO video_uploads (
       id,
@@ -43,7 +41,7 @@ export const createUpload = async (
 
 export const findUploadByIdAndUserId = async (
   uploadId: string,
-  userId: string
+  userId: string,
 ): Promise<VideoUpload | null> => {
   const query = `
     SELECT *
@@ -52,10 +50,7 @@ export const findUploadByIdAndUserId = async (
     LIMIT 1
   `;
 
-  const result = await pool.query(query, [
-    uploadId,
-    userId,
-  ]);
+  const result = await pool.query(query, [uploadId, userId]);
 
   return result.rows[0] ?? null;
 };
@@ -63,7 +58,7 @@ export const findUploadByIdAndUserId = async (
 export const updateUploadStatus = async (
   uploadId: string,
   status: UploadStatus,
-  client: PgClient = pool
+  client: PgClient = pool,
 ): Promise<void> => {
   const query = `
     UPDATE video_uploads

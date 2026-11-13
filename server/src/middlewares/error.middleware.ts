@@ -6,7 +6,7 @@ export const errorHandler = (
   err: AppError,
   _req: Request,
   res: Response,
-  _next: NextFunction
+  _next: NextFunction,
 ): void => {
   logger.error(`❌ Error caught by global error handler: ${err}`);
 

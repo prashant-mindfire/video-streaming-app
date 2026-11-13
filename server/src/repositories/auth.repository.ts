@@ -1,11 +1,8 @@
-import { pool } from "../config/db";
-import type { CreateUserInput } from "../models/user.model.ts";
+import { pool } from '../config/db';
+import type { CreateUserInput } from '../models/user.model.ts';
 
 export const findUserByEmail = async (email: string) => {
-  const result = await pool.query(
-    `SELECT * FROM users WHERE email = $1`,
-    [email]
-  );
+  const result = await pool.query(`SELECT * FROM users WHERE email = $1`, [email]);
 
   return result.rows[0] ?? null;
 };
@@ -17,16 +14,13 @@ export const createUser = async (user: CreateUserInput) => {
     )
     VALUES (gen_random_uuid(), $1, $2, $3, $4)
     RETURNING id, name, email, role, created_at`,
-    [user.name, user.email, user.role, user.password_hash]
+    [user.name, user.email, user.role, user.password_hash],
   );
 
   return result.rows[0];
 };
 
-export const createSession = async (
-  userId: string,
-  expiresAt: Date
-): Promise<any> => {
+export const createSession = async (userId: string, expiresAt: Date): Promise<any> => {
   const result = await pool.query<any>(
     `INSERT INTO auth_sessions (
       user_id,
@@ -34,16 +28,13 @@ export const createSession = async (
     )
     VALUES ($1, $2)
     RETURNING *`,
-    [userId, expiresAt]
+    [userId, expiresAt],
   );
 
   return result.rows[0];
 };
 
-export const findActiveSession = async (
-  sessionId: string,
-  userId: string
-): Promise<any | null> => {
+export const findActiveSession = async (sessionId: string, userId: string): Promise<any | null> => {
   const result = await pool.query<any>(
     `SELECT *
      FROM auth_sessions
@@ -51,20 +42,18 @@ export const findActiveSession = async (
        AND user_id = $2
        AND revoked_at IS NULL
        AND expires_at > NOW()`,
-    [sessionId, userId]
+    [sessionId, userId],
   );
 
   return result.rows[0] ?? null;
 };
 
-export const revokeSession = async (
-  sessionId: string
-): Promise<void> => {
+export const revokeSession = async (sessionId: string): Promise<void> => {
   await pool.query(
     `UPDATE auth_sessions
      SET revoked_at = NOW()
      WHERE id = $1
        AND revoked_at IS NULL`,
-    [sessionId]
+    [sessionId],
   );
 };

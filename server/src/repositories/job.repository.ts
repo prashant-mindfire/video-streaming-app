@@ -1,9 +1,9 @@
-import { randomUUID } from "crypto";
-import type { PgClient } from "@/utils/withTransaction";
+import { randomUUID } from 'crypto';
+import type { PgClient } from '@/utils/withTransaction';
 
 export const createVideoProcessingJob = async (
   client: PgClient,
-  videoId: string
+  videoId: string,
 ): Promise<string> => {
   const jobId = randomUUID();
 
@@ -15,7 +15,7 @@ export const createVideoProcessingJob = async (
       status
     )
     VALUES ($1, $2, 'video_processing', 'queued')`,
-    [jobId, videoId]
+    [jobId, videoId],
   );
 
   return jobId;

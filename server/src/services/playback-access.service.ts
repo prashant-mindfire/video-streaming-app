@@ -1,6 +1,6 @@
-import crypto from "crypto";
-import { redis } from "../config/redis"; // Your Redis client instance
-import { PLAYBACK_TTL_SECONDS } from "@/utils/constants";
+import crypto from 'crypto';
+import { redis } from '../config/redis'; // Your Redis client instance
+import { PLAYBACK_TTL_SECONDS } from '@/utils/constants';
 
 interface CreatePlaybackAccessParams {
   videoId: string;
@@ -21,13 +21,10 @@ export const createPlaybackAccess = async ({
   masterPlaylistKey,
 }: CreatePlaybackAccessParams): Promise<PlaybackAccessResponse> => {
   // Generate a cryptographically secure random session token
-  const playbackToken = crypto.randomBytes(32).toString("hex");
+  const playbackToken = crypto.randomBytes(32).toString('hex');
 
   // This allows authorizing both the master playlist and all .ts/.m4s segments inside that folder
-  const hlsBasePrefix = masterPlaylistKey.substring(
-    0,
-    masterPlaylistKey.lastIndexOf("/")
-  );
+  const hlsBasePrefix = masterPlaylistKey.substring(0, masterPlaylistKey.lastIndexOf('/'));
 
   // Store session details in Redis with automatic expiration (EX)
   const redisKey = `playback:session:${playbackToken}`;
@@ -38,7 +35,7 @@ export const createPlaybackAccess = async ({
     hlsBasePrefix,
   });
 
-  await redis.set(redisKey, sessionPayload, "EX", PLAYBACK_TTL_SECONDS);
+  await redis.set(redisKey, sessionPayload, 'EX', PLAYBACK_TTL_SECONDS);
 
   // Calculate exact expiration timestamp for the client player
   const expiresAt = new Date(Date.now() + PLAYBACK_TTL_SECONDS * 1000);

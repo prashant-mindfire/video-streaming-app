@@ -1,6 +1,6 @@
-import type { PgClient } from "@/utils/withTransaction";
-import { randomUUID } from "crypto";
-import { pool } from "@/config/db";
+import type { PgClient } from '@/utils/withTransaction';
+import { randomUUID } from 'crypto';
+import { pool } from '@/config/db';
 
 export interface CreateVideoParams {
   userId: string;
@@ -16,14 +16,11 @@ export interface FindVideosParams {
   status?: string;
   page: number;
   limit: number;
-  sortBy: "created_at" | "title" | "file_size";
-  sortOrder: "ASC" | "DESC";
+  sortBy: 'created_at' | 'title' | 'file_size';
+  sortOrder: 'ASC' | 'DESC';
 }
 
-export const createVideo = async (
-  client: PgClient,
-  params: CreateVideoParams
-): Promise<string> => {
+export const createVideo = async (client: PgClient, params: CreateVideoParams): Promise<string> => {
   const videoId = randomUUID();
 
   await client.query(
@@ -37,38 +34,21 @@ export const createVideo = async (
       status
     )
     VALUES ($1, $2, $3, $4, $5, $6, 'queued')`,
-    [
-      videoId,
-      params.userId,
-      params.uploadId,
-      params.title,
-      params.objectKey,
-      params.fileSize,
-    ]
+    [videoId, params.userId, params.uploadId, params.title, params.objectKey, params.fileSize],
   );
 
   return videoId;
 };
 
 export const findVideos = async (params: FindVideosParams) => {
-  const {
-    userId,
-    search,
-    status,
-    page,
-    limit,
-    sortBy,
-    sortOrder,
-  } = params;
+  const { userId, search, status, page, limit, sortBy, sortOrder } = params;
 
-  const conditions: string[] = ["user_id = $1"];
+  const conditions: string[] = ['user_id = $1'];
   const values: unknown[] = [userId];
 
   if (search) {
     values.push(`%${search}%`);
-    conditions.push(
-      `(title ILIKE $${values.length} OR description ILIKE $${values.length})`
-    );
+    conditions.push(`(title ILIKE $${values.length} OR description ILIKE $${values.length})`);
   }
 
   if (status) {
@@ -76,7 +56,7 @@ export const findVideos = async (params: FindVideosParams) => {
     conditions.push(`status = $${values.length}`);
   }
 
-  const whereClause = conditions.join(" AND ");
+  const whereClause = conditions.join(' AND ');
   const offset = (page - 1) * limit;
 
   // sortBy and sortOrder are allowlisted by the service/controller.
@@ -117,10 +97,7 @@ export const findVideos = async (params: FindVideosParams) => {
   };
 };
 
-export const findVideoById = async (
-  videoId: string,
-  userId: string
-) => {
+export const findVideoById = async (videoId: string, userId: string) => {
   const result = await pool.query(
     `SELECT
        id,
@@ -140,27 +117,21 @@ export const findVideoById = async (
      FROM videos
      WHERE id = $1 AND user_id = $2
      LIMIT 1`,
-    [videoId, userId]
+    [videoId, userId],
   );
 
   return result.rows[0] ?? null;
 };
 
-export const deleteVideo = async (
-  videoId: string,
-  userId: string
-) => {
+export const deleteVideo = async (videoId: string, userId: string) => {
   await pool.query(
     `DELETE FROM videos
      WHERE id = $1 AND user_id = $2`,
-    [videoId, userId]
+    [videoId, userId],
   );
-}
+};
 
-export const findVideoProcessingStatus = async (
-  videoId: string,
-  userId: string
-) => {
+export const findVideoProcessingStatus = async (videoId: string, userId: string) => {
   const result = await pool.query(
     `SELECT
        v.id AS video_id,
@@ -176,22 +147,19 @@ export const findVideoProcessingStatus = async (
        AND v.user_id = $2
      ORDER BY pj.created_at DESC
      LIMIT 1`,
-    [videoId, userId]
+    [videoId, userId],
   );
 
   return result.rows[0] ?? null;
 };
 
-export const findVideoForPlayback = async (
-  videoId: string,
-  userId: string
-) => {
+export const findVideoForPlayback = async (videoId: string, userId: string) => {
   const result = await pool.query(
     `SELECT id, status, hls_master_playlist_key
      FROM videos
      WHERE id = $1 AND user_id = $2
      LIMIT 1`,
-    [videoId, userId]
+    [videoId, userId],
   );
 
   return result.rows[0] ?? null;

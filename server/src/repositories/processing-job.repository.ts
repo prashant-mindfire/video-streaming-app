@@ -1,9 +1,9 @@
-import type { ProcessingJobForRetry } from "@/models/processing-job.model";
-import type { PoolClient } from "pg";
+import type { ProcessingJobForRetry } from '@/models/processing-job.model';
+import type { PoolClient } from 'pg';
 
 export const findProcessingJobForUpdate = async (
   client: PoolClient,
-  jobId: string
+  jobId: string,
 ): Promise<ProcessingJobForRetry | null> => {
   const result = await client.query<ProcessingJobForRetry>(
     `SELECT
@@ -16,16 +16,13 @@ export const findProcessingJobForUpdate = async (
      INNER JOIN videos v ON v.id = pj.video_id
      WHERE pj.id = $1
      FOR UPDATE OF pj`,
-    [jobId]
+    [jobId],
   );
 
   return result.rows[0] ?? null;
 };
 
-export const resetProcessingJobForRetry = async (
-  client: PoolClient,
-  jobId: string
-) => {
+export const resetProcessingJobForRetry = async (client: PoolClient, jobId: string) => {
   await client.query(
     `UPDATE processing_jobs
      SET status = 'queued',
@@ -38,26 +35,23 @@ export const resetProcessingJobForRetry = async (
          dead_lettered_at = NULL,
          updated_at = NOW()
      WHERE id = $1`,
-    [jobId]
+    [jobId],
   );
 };
 
-export const resetVideoForRetry = async (
-  client: PoolClient,
-  videoId: string
-) => {
+export const resetVideoForRetry = async (client: PoolClient, videoId: string) => {
   await client.query(
     `UPDATE videos
      SET status = 'queued',
          updated_at = NOW()
      WHERE id = $1`,
-    [videoId]
+    [videoId],
   );
 };
 
 export const createProcessingOutboxEvent = async (
   client: PoolClient,
-  job: ProcessingJobForRetry
+  job: ProcessingJobForRetry,
 ) => {
   const payload = {
     jobId: job.id,
@@ -76,10 +70,6 @@ export const createProcessingOutboxEvent = async (
        created_at
      )
      VALUES ($1, $2, $3, 'pending', NOW(), NOW())`,
-    [
-      job.id,
-      "video.processing.requested",
-      JSON.stringify(payload),
-    ]
+    [job.id, 'video.processing.requested', JSON.stringify(payload)],
   );
 };

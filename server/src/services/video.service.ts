@@ -1,9 +1,9 @@
-import * as VideoRepository from "@/repositories/video.repository";
-import { AppError } from "@/utils/app.error";
-import { deleteVideoObjects, downloadVideo } from "@/utils/multipart-upload";
-import { getVideoProgress } from "./video-progress.service";
-import { URL_EXPIRY_SECONDS } from "@/utils/constants";
-import { createPlaybackAccess, type PlaybackAccessResponse } from "./playback-access.service";
+import * as VideoRepository from '@/repositories/video.repository';
+import { AppError } from '@/utils/app.error';
+import { deleteVideoObjects, downloadVideo } from '@/utils/multipart-upload';
+import { getVideoProgress } from './video-progress.service';
+import { URL_EXPIRY_SECONDS } from '@/utils/constants';
+import { createPlaybackAccess, type PlaybackAccessResponse } from './playback-access.service';
 
 interface ListVideosParams {
   userId: string;
@@ -15,21 +15,14 @@ interface ListVideosParams {
   sortOrder?: string;
 }
 
-const allowedSortFields = [
-  "created_at",
-  "title",
-  "file_size",
-] as const;
+const allowedSortFields = ['created_at', 'title', 'file_size'] as const;
 
 export const listVideos = async (params: ListVideosParams) => {
-  const sortBy = allowedSortFields.includes(
-    params.sortBy as (typeof allowedSortFields)[number]
-  )
+  const sortBy = allowedSortFields.includes(params.sortBy as (typeof allowedSortFields)[number])
     ? (params.sortBy as (typeof allowedSortFields)[number])
-    : "created_at";
+    : 'created_at';
 
-  const sortOrder =
-    params.sortOrder?.toUpperCase() === "ASC" ? "ASC" : "DESC";
+  const sortOrder = params.sortOrder?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
   const result = await VideoRepository.findVideos({
     ...params,
@@ -58,14 +51,11 @@ export const listVideos = async (params: ListVideosParams) => {
   };
 };
 
-export const getVideo = async (
-  videoId: string,
-  userId: string
-) => {
+export const getVideo = async (videoId: string, userId: string) => {
   const video = await VideoRepository.findVideoById(videoId, userId);
 
   if (!video) {
-    throw new AppError("Video not found", 404);
+    throw new AppError('Video not found', 404);
   }
 
   return {
@@ -86,14 +76,11 @@ export const getVideo = async (
   };
 };
 
-export const deleteVideo = async (
-  videoId: string,
-  userId: string
-) => {
+export const deleteVideo = async (videoId: string, userId: string) => {
   const video = await VideoRepository.findVideoById(videoId, userId);
 
   if (!video) {
-    throw new AppError("Video not found", 404);
+    throw new AppError('Video not found', 404);
   }
 
   await deleteVideoObjects(userId, videoId);
@@ -101,14 +88,11 @@ export const deleteVideo = async (
   await VideoRepository.deleteVideo(videoId, userId);
 };
 
-export const getProcessingStatus = async (
-  videoId: string,
-  userId: string
-) => {
+export const getProcessingStatus = async (videoId: string, userId: string) => {
   const dbStatus = await VideoRepository.findVideoProcessingStatus(videoId, userId);
 
   if (!dbStatus) {
-    throw new AppError("Video not found", 404);
+    throw new AppError('Video not found', 404);
   }
 
   // Redis contains the latest progress during processing.
@@ -127,12 +111,12 @@ export const getProcessingStatus = async (
     status: dbStatus.video_status,
     progress: dbStatus.progress ?? 0,
     currentStage: dbStatus.last_error
-      ? "Processing failed"
-      : dbStatus.video_status === "ready"
-        ? "Processing completed"
-        : dbStatus.video_status === "queued"
-          ? "Waiting for processing"
-          : "Processing",
+      ? 'Processing failed'
+      : dbStatus.video_status === 'ready'
+        ? 'Processing completed'
+        : dbStatus.video_status === 'queued'
+          ? 'Waiting for processing'
+          : 'Processing',
     updatedAt: dbStatus.updated_at,
     error: dbStatus.last_error,
   };
@@ -140,16 +124,16 @@ export const getProcessingStatus = async (
 
 export const createVideoPlaybackSession = async (
   videoId: string,
-  userId: string
+  userId: string,
 ): Promise<PlaybackAccessResponse> => {
   const video = await VideoRepository.findVideoForPlayback(videoId, userId);
 
   if (!video) {
-    throw new AppError("Video not found", 404);
+    throw new AppError('Video not found', 404);
   }
 
-  if (video.status !== "ready" || !video.hls_master_playlist_key) {
-    throw new Error("Video is not ready for playback");
+  if (video.status !== 'ready' || !video.hls_master_playlist_key) {
+    throw new Error('Video is not ready for playback');
   }
 
   return await createPlaybackAccess({
@@ -159,14 +143,11 @@ export const createVideoPlaybackSession = async (
   });
 };
 
-export const getVideoDownloadLink = async (
-  videoId: string,
-  userId: string
-) => {
+export const getVideoDownloadLink = async (videoId: string, userId: string) => {
   const video = await VideoRepository.findVideoById(videoId, userId);
 
   if (!video) {
-    throw new AppError("Video not found", 404);
+    throw new AppError('Video not found', 404);
   }
 
   const downloadUrl = await downloadVideo(video.original_object_key, video.title);

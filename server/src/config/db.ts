@@ -6,13 +6,13 @@ const pool = new Pool({
 });
 
 const connectDB = async () => {
-    try {
-        await pool.query('SELECT 1');
-        logger.info('Postgres connected');
-    } catch (error) {
-        logger.error('Error connecting to Postgres:', error);
-        process.exit(1);
-    }
+  try {
+    await pool.query('SELECT 1');
+    logger.info('Postgres connected');
+  } catch (error) {
+    logger.error('Error connecting to Postgres:', error);
+    process.exit(1);
+  }
 };
 
 export { connectDB, pool };
