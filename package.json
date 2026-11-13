@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "prepare": "husky"
+    "prepare": "husky",
+    "format": "prettier --write \"client/src/**/*.{ts,tsx,css,json}\" \"server/src/**/*.{ts,json}\"",
+    "format:check": "prettier --check \"client/src/**/*.{ts,tsx,css,json}\" \"server/src/**/*.{ts,json}\""
   },
   "repository": {
     "type": "git",
@@ -21,6 +22,20 @@
   "homepage": "https://github.com/prashant-mindfire/video-streaming-app#readme",
   "devDependencies": {
     "husky": "^9.1.7",
-    "lint-staged": "^17.6.0"
+    "lint-staged": "^17.6.0",
+    "prettier": "^3.10.1"
+  },
+  "lint-staged": {
+    "client/src/**/*.{ts,tsx}": [
+      "prettier --check",
+      "./client/node_modules/.bin/eslint --config client/eslint.config.js"
+    ],
+    "server/src/**/*.ts": [
+      "prettier --check",
+      "./server/node_modules/.bin/eslint --config server/eslint.config.mjs"
+    ],
+    "*.css": [
+      "prettier --check"
+    ]
   }
 }
