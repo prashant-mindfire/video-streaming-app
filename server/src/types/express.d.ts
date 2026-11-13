@@ -1,4 +1,5 @@
 import { Request } from 'express';
+import type { UserRole } from './user';
 
 declare global {
   namespace Express {
@@ -6,7 +7,7 @@ declare global {
       auth?: {
         userId: string;
         sessionId: string;
-        role?: string;
+        role?: UserRole;
       };
     }
   }

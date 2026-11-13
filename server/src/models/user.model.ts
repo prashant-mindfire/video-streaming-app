@@ -1,7 +1,5 @@
-export enum UserRole {
-  USER = "user",
-  ADMIN = "admin",
-}
+import type { UserRole } from "@/types/user";
+
 export interface User {
   id: string;
   name: string;
