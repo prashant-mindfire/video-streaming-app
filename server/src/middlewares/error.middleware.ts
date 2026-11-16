@@ -1,13 +1,8 @@
 import logger from '../utils/logger';
 import { AppError } from '../utils/app.error';
-import type { Request, Response, NextFunction } from 'express';
+import type { Request, Response } from 'express';
 
-export const errorHandler = (
-  err: AppError,
-  _req: Request,
-  res: Response,
-  _next: NextFunction,
-): void => {
+export const errorHandler = (err: AppError, _req: Request, res: Response): void => {
   logger.error(`❌ Error caught by global error handler: ${err}`);
 
   const statusCode = err.statusCode || 500;

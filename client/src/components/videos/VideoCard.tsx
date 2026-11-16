@@ -79,7 +79,7 @@ export const VideoCard = ({
           <span>{video.resolution ?? 'Resolution pending'}</span>
         </div>
 
-        {video.status === 'processing' && <ProcessingProgress progress={video.progress ?? 0} />}
+        {video.status === 'processing' && <ProcessingProgress videoId={video.id} />}
 
         <div className="flex items-center justify-between border-t pt-3">
           <span className="text-xs text-gray-500">
