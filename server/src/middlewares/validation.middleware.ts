@@ -44,7 +44,7 @@ export const validateRequest = (schema: ZodObject) => {
         res.status(400).json({
           success: false,
           message: 'Validation failed',
-          errors: z.treeifyError(error).errors,
+          errors: z.treeifyError(error),
         });
         return;
       }

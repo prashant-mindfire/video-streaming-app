@@ -7,7 +7,6 @@ export const authorizeRoles = (...allowedRoles: UserRole[]) => {
     if (!req.auth?.userId) {
       return next(new AppError('Authentication required', 401));
     }
-
     if (!req.auth.role || !allowedRoles.includes(req.auth.role)) {
       return next(new AppError('Forbidden: Insufficient permissions', 403));
     }

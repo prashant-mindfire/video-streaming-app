@@ -1,5 +1,7 @@
 import { pool } from '../config/db';
 import type { CreateUserInput } from '../models/user.model.ts';
+import type { AuthSession } from '../models/session.model';
+import type { UserRole } from '../types/user';
 
 export const findUserByEmail = async (email: string) => {
   const result = await pool.query(`SELECT * FROM users WHERE email = $1`, [email]);
@@ -34,14 +36,18 @@ export const createSession = async (userId: string, expiresAt: Date): Promise<an
   return result.rows[0];
 };
 
-export const findActiveSession = async (sessionId: string, userId: string): Promise<any | null> => {
-  const result = await pool.query<any>(
-    `SELECT *
-     FROM auth_sessions
-     WHERE id = $1
-       AND user_id = $2
-       AND revoked_at IS NULL
-       AND expires_at > NOW()`,
+export const findActiveSession = async (
+  sessionId: string,
+  userId: string,
+): Promise<(AuthSession & { role: UserRole }) | null> => {
+  const result = await pool.query<AuthSession & { role: UserRole }>(
+    `SELECT s.*, u.role
+     FROM auth_sessions s
+     INNER JOIN users u ON u.id = s.user_id
+     WHERE s.id = $1
+       AND s.user_id = $2
+       AND s.revoked_at IS NULL
+       AND s.expires_at > NOW()`,
     [sessionId, userId],
   );
 

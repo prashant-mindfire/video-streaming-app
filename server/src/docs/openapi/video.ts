@@ -13,7 +13,7 @@
  *           type: integer
  *           minimum: 1
  *           default: 1
- *       - name: limit
+ *       - name: pageSize
  *         in: query
  *         schema:
  *           type: integer
@@ -32,16 +32,17 @@
  *           enum: [queued, processing, ready, failed]
  *       - name: sortBy
  *         in: query
+ *         description: newest, oldest, and title provide UI-friendly sort choices; existing database sort keys remain supported.
  *         schema:
  *           type: string
- *           enum: [created_at, title, file_size]
- *           default: created_at
+ *           enum: [newest, oldest, title, created_at, file_size]
+ *           default: newest
  *       - name: sortOrder
  *         in: query
+ *         description: Overrides the default direction for the selected sort. Defaults are newest descending, oldest ascending, and title ascending.
  *         schema:
  *           type: string
  *           enum: [asc, desc]
- *           default: desc
  *     responses:
  *       '200':
  *         description: Videos fetched successfully

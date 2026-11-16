@@ -18,6 +18,10 @@ export default defineConfig([
       ecmaVersion: 2022,
       globals: globals.node,
     },
+    rules: {
+      'hub/plural-resource-paths': 'off',
+      '@typescript-eslint/no-empty-object-type': 'off',
+    },
   },
   eslintConfigPrettier,
 ]);

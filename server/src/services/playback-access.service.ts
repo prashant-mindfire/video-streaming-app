@@ -15,6 +15,13 @@ export interface PlaybackAccessResponse {
   expiresAt: Date;
 }
 
+export interface PlaybackSessionData {
+  videoId: string;
+  userId: string;
+  masterPlaylistKey: string;
+  hlsBasePrefix: string;
+}
+
 export const createPlaybackAccess = async ({
   videoId,
   userId,
@@ -46,4 +53,17 @@ export const createPlaybackAccess = async ({
     expiresIn: PLAYBACK_TTL_SECONDS,
     expiresAt,
   };
+};
+
+export const getPlaybackSession = async (
+  playbackToken: string,
+): Promise<PlaybackSessionData | null> => {
+  const redisKey = `playback:session:${playbackToken}`;
+  const rawSession = await redis.get(redisKey);
+
+  if (!rawSession) {
+    return null;
+  }
+
+  return JSON.parse(rawSession) as PlaybackSessionData;
 };
