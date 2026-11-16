@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 import { Button } from './Button';
-import { Dialog } from './Dialog';
+import Dialog from './Dialog';
 
 export interface ConfirmDialogProps {
   open: boolean;

@@ -6,7 +6,7 @@ interface VideoStatusBadgeProps {
 }
 
 const statusConfig: Record<
-  VideoStatus,
+  VideoStatus | 'uploaded',
   { label: string; variant: 'success' | 'warning' | 'danger' | 'info' }
 > = {
   uploaded: { label: 'Uploaded', variant: 'info' },
