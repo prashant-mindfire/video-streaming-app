@@ -1,10 +1,11 @@
 import bcrypt from 'bcryptjs';
 import * as AuthRepository from '../repositories/auth.repository';
-import type { User, UserRole } from '@/models/user.model';
+import type { User } from '@/models/user.model';
 import { AppError } from '@/utils/app.error';
 import { generateToken } from '@/utils/jwt';
 import { comparePassword } from '@/utils/password';
 import { SESSION_DURATION_DAYS } from '@/utils/constants';
+import type { UserRole } from '@/types/user';
 
 export const registerUser = async (
   name: string,

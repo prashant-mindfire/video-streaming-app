@@ -1,0 +1,166 @@
+# docker-compose.dev.yml
+
+services:
+  # Backend
+  server:
+    image: video-streaming-server:prod
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    env_file:
+      - .env.prod
+    command: npm run prod
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+      rustfs:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+
+  # Frontend
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+    depends_on:
+      - server
+
+  # Outbox runner
+  outbox:
+    image: video-streaming-server:prod
+    pull_policy: never
+    command: npm run start:outbox
+    restart: unless-stopped
+    env_file:
+      - ./.env.prod
+    depends_on:
+      server:
+        condition: service_started
+      postgres:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+
+  # Video processing worker
+  worker:
+    image: video-streaming-server:prod
+    pull_policy: never
+    command: npm run start:worker
+    restart: unless-stopped
+    env_file:
+      - ./.env.prod
+    depends_on:
+      server:
+        condition: service_started
+      postgres:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      rustfs:
+        condition: service_started
+      redis:
+        condition: service_started
+
+  # PostgreSQL database
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    restart: unless-stopped
+    ports:
+      # AMQP protocol port (used by applications to send/receive messages)
+      - "5672:5672"
+      # Management UI web console port
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    volumes:
+      # Persists RabbitMQ data so it survives container restarts
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Redis in-memory cache
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  # Redis insight GUI
+  redisinsight:
+    image: redis/redisinsight:latest
+    ports:
+      - "5540:5540"
+    volumes:
+      - redisinsight_data:/data
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  # RustFs Permission Fixer (Runs once before RustFs starts)
+  rustfs_perms:
+    image: alpine
+    user: root
+    volumes:
+      # Mount the parent root of the volumes so it fixes permissions for both subfolders at once
+      - rustfs_root:/fix_path
+    command: chown -R 10001:10001 /fix_path
+
+  # RustFs object storage
+  rustfs:
+    image: rustfs/rustfs:latest
+    ports:
+      - "9000:9000" # MinIO/S3 API Replacement
+      - "9001:9001" # RustFs Web Console
+    depends_on:
+      rustfs_perms:
+        condition: service_completed_successfully
+    volumes:
+      # Map subdirectories from the same named volume to preserve permissions cleanly
+      - rustfs_root:/data
+      - rustfs_root:/var/log/rustfs/
+    environment:
+      - RUSTFS_ADDRESS=:9000
+      - RUSTFS_CONSOLE_ADDRESS=:9001
+      - RUSTFS_CONSOLE_ENABLE=true
+      - RUSTFS_OBS_LOGGER_LEVEL=error
+      - RUSTFS_OBS_LOG_DIRECTORY=/var/log/rustfs/
+      # Mandatory security credentials required to log in and allow backend access
+      - RUSTFS_ACCESS_KEY=${RUSTFS_ACCESS_KEY}
+      - RUSTFS_SECRET_KEY=${RUSTFS_SECRET_KEY}
+
+volumes:
+  pgdata:
+    external: true
+  rabbitmq_data:
+  redis_data:
+  redisinsight_data:
+  rustfs_root:

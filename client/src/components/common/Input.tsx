@@ -1,8 +1,4 @@
-import {
-  useFormContext,
-  type FieldPath,
-  type FieldValues,
-} from 'react-hook-form';
+import { useFormContext, type FieldPath, type FieldValues } from 'react-hook-form';
 import { type InputHTMLAttributes, type ReactNode } from 'react';
 
 interface InputProps<T extends FieldValues> extends Omit<

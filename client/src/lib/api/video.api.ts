@@ -4,7 +4,6 @@ import type {
   PlaybackResponse,
   Video,
   VideoDetail,
-  VideoDownloadLink,
   VideoProcessingStatus,
   VideoQueryFilters,
 } from '@/types/video';
