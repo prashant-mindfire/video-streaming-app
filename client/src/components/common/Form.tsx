@@ -1,14 +1,15 @@
-
 import {
   FormProvider,
   type FieldValues,
   type SubmitHandler,
   type UseFormReturn,
-} from "react-hook-form";
-import type { FormHTMLAttributes, ReactNode } from "react";
+} from 'react-hook-form';
+import type { FormHTMLAttributes, ReactNode } from 'react';
 
-interface FormProps<T extends FieldValues>
-  extends Omit<FormHTMLAttributes<HTMLFormElement>, "onSubmit"> {
+interface FormProps<T extends FieldValues> extends Omit<
+  FormHTMLAttributes<HTMLFormElement>,
+  'onSubmit'
+> {
   methods: UseFormReturn<T>;
   onSubmit: SubmitHandler<T>;
   children: ReactNode;
@@ -22,7 +23,7 @@ export const Form = <T extends FieldValues>({
 }: FormProps<T>) => {
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(onSubmit)} {...formProps}>
+      <form onSubmit={methods.handleSubmit(onSubmit)} {...formProps} noValidate>
         {children}
       </form>
     </FormProvider>

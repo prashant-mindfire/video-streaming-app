@@ -1,43 +1,36 @@
-import { useEffect, type FC, type ReactNode } from "react";
-import { X } from "lucide-react";
+import { useEffect, type FC, type ReactNode } from 'react';
+import { X } from 'lucide-react';
 
 export interface DialogProps {
   open: boolean;
   onClose: () => void;
   title: string;
   children: ReactNode;
-  size?: "sm" | "md" | "lg";
+  size?: 'sm' | 'md' | 'lg';
 }
 
 const sizes = {
-  sm: "max-w-md",
-  md: "max-w-xl",
-  lg: "max-w-3xl",
+  sm: 'max-w-md',
+  md: 'max-w-xl',
+  lg: 'max-w-3xl',
 };
 
-export const Dialog: FC<DialogProps> = ({
-  open,
-  onClose,
-  title,
-  children,
-  size = "md",
-}: DialogProps) => {
-
+const Dialog: FC<DialogProps> = ({ open, onClose, title, children, size = 'md' }: DialogProps) => {
   useEffect(() => {
     if (!open) return;
 
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+      if (event.key === 'Escape') {
         onClose();
       }
     };
 
-    document.addEventListener("keydown", handleEscape);
-    document.body.style.overflow = "hidden";
+    document.addEventListener('keydown', handleEscape);
+    document.body.style.overflow = 'hidden';
 
     return () => {
-      document.removeEventListener("keydown", handleEscape);
-      document.body.style.overflow = "";
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = '';
     };
   }, [open, onClose]);
 
@@ -71,10 +64,10 @@ export const Dialog: FC<DialogProps> = ({
           </button>
         </div>
 
-        <div className="p-5">
-          {children}
-        </div>
+        <div className="p-5">{children}</div>
       </div>
     </div>
   );
 };
+
+export default Dialog;

@@ -1,5 +1,5 @@
-import type { FC } from "react";
-import { Button } from "./Button";
+import type { FC } from 'react';
+import { Button } from './Button';
 
 export interface PaginationProps {
   page: number;

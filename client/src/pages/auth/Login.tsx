@@ -1,113 +1,82 @@
-import { isAxiosError } from "axios";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { Navigate, useLocation, useNavigate } from "react-router";
-
-// import { useAuth } from "@/hooks/useAuth";
-import { Button, Form, Input } from "@/components/common";
-import { loginSchema, type LoginFormValues } from "@/schema/auth.schema";
+import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-
-// import type { LoginCredentials } from "@/types/auth.types";
+import { Link, useLocation, useNavigate } from 'react-router';
+import { Form } from '../../components/common/Form';
+import { Input } from '../../components/common/Input';
+import { Button } from '../../components/common/Button';
+import { AuthLayout } from '../../components/auth/AuthLayout';
+import { useAuth } from '../../hooks/useAuth';
+import { getErrorMessage } from '../../utils/errorHandler';
+import { useToast } from '@/components/common/toast/useToast';
+import { loginSchema, type LoginFormValues } from '@/schema/auth.schema';
 
 const Login = () => {
-  // const navigate = useNavigate();
-  // const location = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  // const { login, user, isLoading } = useAuth();
-
-  // const [serverError, setServerError] = useState("");
+  const { login } = useAuth();
+  const toast = useToast();
 
   const methods = useForm<LoginFormValues>({
     resolver: yupResolver(loginSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      email: '',
+      password: '',
     },
-    mode: "onTouched"
   });
 
-  const from =
-    (location.state as { from?: { pathname: string } } | null)
-      ?.from?.pathname ?? "/videos";
+  const onSubmit = async (values: LoginFormValues) => {
+    try {
+      await login(values);
 
-  const onSubmit = async (credentials: LoginCredentials) => {
-    // setServerError("");
+      toast.success('Logged in successfully.');
 
-    // try {
-    //   await login({
-    //     email: credentials.email.trim(),
-    //     password: credentials.password,
-    //   });
+      const from = location.state?.from;
 
-    //   navigate(from, { replace: true });
-    // } catch (error) {
-    //   const message = isAxiosError<{ message?: string }>(error)
-    //     ? error.response?.data?.message
-    //     : undefined;
-
-    //   setServerError(
-    //     message || "Invalid email or password. Please try again."
-    //   );
-    // }
+      navigate(
+        from?.pathname ? `${from.pathname}${from.search ?? ''}${from.hash ?? ''}` : '/videos',
+        { replace: true },
+      );
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
   };
 
-  // if (isLoading) {
-  //   return (
-  //     <div className="flex min-h-screen items-center justify-center">
-  //       <p className="text-sm text-gray-500">Checking session...</p>
-  //     </div>
-  //   );
-  // }
-
-  // if (user) {
-  //   return <Navigate to={from} replace />;
-  // }
-
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+    <AuthLayout
+      title="Welcome back"
+      description="Sign in to access your video platform."
+      footer={
+        <>
+          Don't have an account?{' '}
+          <Link to="/register" className="font-medium text-blue-600 hover:text-blue-700">
+            Create an account
+          </Link>
+        </>
+      }
+    >
+      <Form methods={methods} onSubmit={onSubmit} className="space-y-5">
+        <Input<LoginFormValues>
+          name="email"
+          label="Email address"
+          type="email"
+          placeholder="you@example.com"
+          autoComplete="email"
+        />
 
-        {/* Branding */}
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600 text-xl font-bold text-white">
-            S
-          </div>
+        <Input<LoginFormValues>
+          name="password"
+          label="Password"
+          type="password"
+          placeholder="Enter your password"
+          autoComplete="current-password"
+        />
 
-          <h1 className="text-2xl font-bold text-gray-900">
-            Welcome back
-          </h1>
-
-          <p className="mt-2 text-sm text-gray-500">
-            Sign in to manage your videos.
-          </p>
-        </div>
-
-        {/* Login form */}
-        <Form methods={methods} onSubmit={onSubmit} className="space-y-4">
-          <Input<LoginFormValues>
-            name="email"
-            label="Email address"
-            placeholder="you@example.com"
-          />
-
-          <Input<LoginFormValues>
-            name="password"
-            label="Password"
-            type="password"
-            placeholder="Enter your password"
-          />
-
-          <div className="flex justify-center">
-            <Button type="submit" className="flex justify-center">Login</Button>
-          </div>
-        </Form>
-
-        <p className="mt-6 text-center text-xs text-gray-400">
-          Secure video management platform
-        </p>
-      </div>
-    </div>
+        <Button type="submit" fullWidth loading={methods.formState.isSubmitting}>
+          Sign In
+        </Button>
+      </Form>
+    </AuthLayout>
   );
 };
 

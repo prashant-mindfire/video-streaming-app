@@ -1,4 +1,3 @@
-import { Request } from 'express';
 import type { UserRole } from './user';
 
 declare global {
@@ -7,7 +6,7 @@ declare global {
       auth?: {
         userId: string;
         sessionId: string;
-        role?: UserRole;
+        role: UserRole;
       };
     }
   }
