@@ -4,50 +4,87 @@ import { deleteVideoObjects, downloadVideo } from '@/utils/multipart-upload';
 import { getVideoProgress } from './video-progress.service';
 import { URL_EXPIRY_SECONDS } from '@/utils/constants';
 import { createPlaybackAccess, type PlaybackAccessResponse } from './playback-access.service';
+import { GetObjectCommand } from '@aws-sdk/client-s3';
+import { RUSTFS_BUCKET_NAME, s3Client } from '@/config/rustfs';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 interface ListVideosParams {
   userId: string;
   search?: string;
   status?: string;
   page: number;
-  limit: number;
+  pageSize: number;
   sortBy?: string;
   sortOrder?: string;
 }
 
 const allowedSortFields = ['created_at', 'title', 'file_size'] as const;
+const semanticSorts = {
+  newest: { sortBy: 'created_at', sortOrder: 'DESC' },
+  oldest: { sortBy: 'created_at', sortOrder: 'ASC' },
+  title: { sortBy: 'title', sortOrder: 'ASC' },
+} as const;
 
 export const listVideos = async (params: ListVideosParams) => {
-  const sortBy = allowedSortFields.includes(params.sortBy as (typeof allowedSortFields)[number])
-    ? (params.sortBy as (typeof allowedSortFields)[number])
-    : 'created_at';
+  const { pageSize, ...repositoryParams } = params;
+  const semanticSort = params.sortBy
+    ? semanticSorts[params.sortBy as keyof typeof semanticSorts]
+    : undefined;
+  const sortBy =
+    semanticSort?.sortBy ??
+    (allowedSortFields.includes(params.sortBy as (typeof allowedSortFields)[number])
+      ? (params.sortBy as (typeof allowedSortFields)[number])
+      : 'created_at');
 
-  const sortOrder = params.sortOrder?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+  const requestedSortOrder = params.sortOrder?.toUpperCase();
+  const sortOrder =
+    requestedSortOrder === 'ASC' || requestedSortOrder === 'DESC'
+      ? requestedSortOrder
+      : (semanticSort?.sortOrder ?? 'DESC');
 
   const result = await VideoRepository.findVideos({
-    ...params,
+    ...repositoryParams,
+    limit: pageSize,
     sortBy,
     sortOrder,
   });
 
+  const videos = await Promise.all(
+    result.videos.map(async (video) => {
+      const thumbnailUrl = video.thumbnail_object_key
+        ? await getSignedUrl(
+            s3Client,
+            new GetObjectCommand({
+              Bucket: RUSTFS_BUCKET_NAME,
+              Key: video.thumbnail_object_key,
+            }),
+            { expiresIn: 3600 },
+          )
+        : null;
+
+      return {
+        id: video.id,
+        title: video.title,
+        description: video.description,
+        thumbnailObjectKey: video.thumbnail_object_key,
+        thumbnailUrl,
+        durationSeconds: video.duration_seconds,
+        width: video.width,
+        height: video.height,
+        codec: video.codec,
+        fileSize: Number(video.file_size),
+        status: video.status,
+        createdAt: video.created_at,
+      };
+    }),
+  );
+
   return {
-    videos: result.videos.map((video) => ({
-      id: video.id,
-      title: video.title,
-      description: video.description,
-      thumbnailObjectKey: video.thumbnail_object_key,
-      durationSeconds: video.duration_seconds,
-      width: video.width,
-      height: video.height,
-      codec: video.codec,
-      fileSize: Number(video.file_size),
-      status: video.status,
-      createdAt: video.created_at,
-    })),
+    videos,
     page: params.page,
-    limit: params.limit,
+    limit: pageSize,
     total: result.total,
-    totalPages: Math.ceil(result.total / params.limit),
+    totalPages: Math.ceil(result.total / pageSize),
   };
 };
 

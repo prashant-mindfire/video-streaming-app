@@ -25,6 +25,7 @@ export const authenticate = async (
   req.auth = {
     userId: decoded.sub,
     sessionId: decoded.sid,
+    role: session.role,
   };
 
   return next();

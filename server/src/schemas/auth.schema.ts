@@ -1,4 +1,4 @@
-import { UserRole } from '@/models/user.model';
+import { UserRole } from '@/types/user';
 import { z } from 'zod';
 
 export const loginSchema = z.object({
@@ -24,8 +24,8 @@ export const registerSchema = z.object({
       .string()
       .min(1, 'Password is required')
       .min(8, 'Password must be at least 8 characters long'),
-    role: z.enum(UserRole, {
-      error: 'Invalid role',
+    role: z.literal(UserRole.USER, {
+      error: 'Public registration only supports the user role',
     }),
   }),
 });

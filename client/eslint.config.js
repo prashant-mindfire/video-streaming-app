@@ -21,6 +21,9 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
     },
+    rules: {
+      'hub/react-filename-pascalcase': 'off'
+    }
   },
   eslintConfigPrettier,
 ]);

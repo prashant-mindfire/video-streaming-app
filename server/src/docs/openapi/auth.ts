@@ -18,7 +18,8 @@
  *           minLength: 8
  *         role:
  *           type: string
- *           enum: [user, admin]
+ *           enum: [user]
+ *           description: Public registration creates user accounts only.
  *     LoginUserRequest:
  *       type: object
  *       required: [email, password]

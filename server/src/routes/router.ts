@@ -1,6 +1,7 @@
 import * as DashboardController from '@/controllers/dashboard.controller';
 import * as ProcessingJobController from '@/controllers/processing-job.controller';
 import * as VideoController from '@/controllers/video.controller';
+import * as StreamController from '@/controllers/stream.controller';
 import * as RoleMiddleware from '@/middlewares/role.middleware';
 import { loginSchema, registerSchema } from '@/schemas/auth.schema';
 import { retryJobParamsSchema } from '@/schemas/processing-job.schema';
@@ -18,6 +19,7 @@ import * as UploadController from '../controllers/upload.controller';
 import * as UserController from '../controllers/user.controller';
 import * as AuthMiddleware from '../middlewares/auth.middleware';
 import * as ValidationMiddleware from '../middlewares/validation.middleware';
+import { streamAssetSchema } from '@/schemas/stream-asset.schema';
 
 const router = Router();
 
@@ -101,13 +103,19 @@ router.get(
   [AuthMiddleware.authenticate, ValidationMiddleware.validateRequest(getVideoParamsSchema)],
   VideoController.getVideoDownloadLink,
 );
-// router.delete("/videos/uploads/:uploadId", authenticate, videoController.abortUpload);
 
 // Dashboard
 router.get(
   '/admin/dashboard/overview',
   [AuthMiddleware.authenticate, RoleMiddleware.authorizeRoles(UserRole.ADMIN)],
   DashboardController.getDashboardOverview,
+);
+
+// Stream
+router.get(
+  '/stream/:token/*filePath',
+  [ValidationMiddleware.validateRequest(streamAssetSchema)],
+  StreamController.streamHlsAsset,
 );
 
 export default router;
