@@ -34,7 +34,8 @@ services:
       - "3000:80"
     restart: unless-stopped
     depends_on:
-      - server
+      server:
+        condition: service_started
 
   # Outbox runner
   outbox:
