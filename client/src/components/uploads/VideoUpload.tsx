@@ -13,7 +13,6 @@ const VideoUpload = ({ onUploadComplete }: VideoUploadProps) => {
     addFiles,
     startUploads,
     removeQueuedItem,
-    // clearCompleted,
   } = useVideoUpload();
 
   const queuedCount = uploads.filter((item) => item.status === 'queued').length;
@@ -33,7 +32,6 @@ const VideoUpload = ({ onUploadComplete }: VideoUploadProps) => {
       <UploadQueue
         uploads={uploads}
         onRemove={removeQueuedItem}
-        // onClearCompleted={clearCompleted}
       />
 
       {queuedCount > 0 && (
