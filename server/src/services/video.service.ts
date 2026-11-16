@@ -5,7 +5,7 @@ import { getVideoProgress } from './video-progress.service';
 import { URL_EXPIRY_SECONDS } from '@/utils/constants';
 import { createPlaybackAccess, type PlaybackAccessResponse } from './playback-access.service';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
-import { RUSTFS_BUCKET_NAME, s3Client } from '@/config/rustfs';
+import { RUSTFS_BUCKET_NAME, s3PresignClient } from '@/config/rustfs';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 interface ListVideosParams {
@@ -53,7 +53,7 @@ export const listVideos = async (params: ListVideosParams) => {
     result.videos.map(async (video) => {
       const thumbnailUrl = video.thumbnail_object_key
         ? await getSignedUrl(
-            s3Client,
+            s3PresignClient,
             new GetObjectCommand({
               Bucket: RUSTFS_BUCKET_NAME,
               Key: video.thumbnail_object_key,
