@@ -30,7 +30,9 @@ export const generatePresignedPartUrl = async (
   });
 
   // Generates a secure link that expires automatically in 15 minutes (900 seconds)
-  const presignedUrl = await getSignedUrl(s3PresignClient, command, { expiresIn: URL_EXPIRY_SECONDS });
+  const presignedUrl = await getSignedUrl(s3PresignClient, command, {
+    expiresIn: URL_EXPIRY_SECONDS,
+  });
 
   return presignedUrl;
 };
@@ -147,7 +149,9 @@ export const downloadVideo = async (objectKey: string, fileName: string): Promis
     ResponseContentDisposition: `attachment; filename="${fileName}"`,
   });
 
-  const downloadUrl = await getSignedUrl(s3PresignClient, command, { expiresIn: URL_EXPIRY_SECONDS });
+  const downloadUrl = await getSignedUrl(s3PresignClient, command, {
+    expiresIn: URL_EXPIRY_SECONDS,
+  });
 
   return downloadUrl;
 };

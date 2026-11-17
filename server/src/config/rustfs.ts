@@ -20,6 +20,5 @@ export const s3Client = new S3Client({
 
 export const s3PresignClient = new S3Client({
   ...sharedConfig,
-  endpoint: (process.env.RUSTFS_PUBLIC_ENDPOINT ||
-    process.env.RUSTFS_STORAGE_ENDPOINT) as string,
+  endpoint: (process.env.RUSTFS_PUBLIC_ENDPOINT || process.env.RUSTFS_STORAGE_ENDPOINT) as string,
 });

@@ -6,10 +6,7 @@ interface UploadQueueProps {
   onRemove: (id: string) => void;
 }
 
-const UploadQueue = ({
-  uploads,
-  onRemove,
-}: UploadQueueProps) => {
+const UploadQueue = ({ uploads, onRemove }: UploadQueueProps) => {
   if (uploads.length === 0) return null;
 
   return (
