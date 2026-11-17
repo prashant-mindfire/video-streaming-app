@@ -12,8 +12,8 @@ export interface CreateVideoParams {
 
 export interface FindVideosParams {
   userId: string;
-  search?: string;
-  status?: string;
+  search?: string | undefined;
+  status?: string | undefined;
   page: number;
   limit: number;
   sortBy: 'created_at' | 'title' | 'file_size';

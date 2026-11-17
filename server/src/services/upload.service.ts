@@ -19,9 +19,7 @@ import { withTransaction } from '@/utils/withTransaction';
 import { CompleteMultipartUploadCommand } from '@aws-sdk/client-s3';
 import { randomUUID } from 'crypto';
 
-/**
- * Initiate multipart upload
- */
+/** Starts an owner-scoped multipart upload and returns its initial presigned part batch. */
 export const initiateUpload = async (userId: string, input: InitiateUploadInput) => {
   const { fileName, contentType, fileSize } = input;
 
@@ -30,6 +28,7 @@ export const initiateUpload = async (userId: string, input: InitiateUploadInput)
   }
 
   if (!contentType.startsWith('video/')) {
+    /** Generates part URLs for an active, unexpired upload owned by the requesting user. */
     throw new AppError('Only video files are allowed', 400);
   }
 
@@ -142,6 +141,10 @@ export const generatePartUploadUrls = async (
   };
 };
 
+/**
+ * Verifies every submitted ETag against storage before completing the object and queuing processing.
+ * @throws {AppError} when the upload is unavailable or its submitted parts are incomplete or invalid.
+ */
 export const completeUpload = async (
   userId: string,
   uploadId: string,

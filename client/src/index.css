@@ -1,7 +1,7 @@
 :root {
   --text: #6b6375;
   --text-h: #08060d;
-  --bg: #fff;
+  --bg: #f4f7f5;
   --border: #e5e4e7;
   --code-bg: #f4f3ec;
   --accent: #aa3bff;
@@ -16,7 +16,7 @@
 
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
-  color-scheme: light dark;
+  color-scheme: light;
   color: var(--text);
   background: var(--bg);
   font-synthesis: none;
@@ -62,4 +62,10 @@
 
 body {
   margin: 0;
+  min-height: 100vh;
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(125deg, rgba(28, 121, 104, 0.06), transparent 38%),
+    linear-gradient(320deg, rgba(194, 146, 70, 0.04), transparent 42%),
+    repeating-linear-gradient(0deg, transparent 0 47px, rgba(39, 70, 65, 0.025) 47px 48px);
 }

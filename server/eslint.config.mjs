@@ -21,6 +21,7 @@ export default defineConfig([
     rules: {
       'hub/plural-resource-paths': 'off',
       '@typescript-eslint/no-empty-object-type': 'off',
+      'hub/verb-consistency': 'off'
     },
   },
   eslintConfigPrettier,

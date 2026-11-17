@@ -10,12 +10,12 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 interface ListVideosParams {
   userId: string;
-  search?: string;
-  status?: string;
+  search?: string | undefined;
+  status?: string | undefined;
   page: number;
   pageSize: number;
-  sortBy?: string;
-  sortOrder?: string;
+  sortBy?: string | undefined;
+  sortOrder?: string | undefined;
 }
 
 const allowedSortFields = ['created_at', 'title', 'file_size'] as const;
@@ -25,6 +25,7 @@ const semanticSorts = {
   title: { sortBy: 'title', sortOrder: 'ASC' },
 } as const;
 
+/** Lists the user's videos while mapping semantic sort names to allowlisted repository fields. */
 export const listVideos = async (params: ListVideosParams) => {
   const { pageSize, ...repositoryParams } = params;
   const semanticSort = params.sortBy
@@ -159,6 +160,7 @@ export const getProcessingStatus = async (videoId: string, userId: string) => {
   };
 };
 
+/** Creates playback access only when the owner-scoped video is ready and has an HLS master playlist. */
 export const createVideoPlaybackSession = async (
   videoId: string,
   userId: string,

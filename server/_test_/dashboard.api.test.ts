@@ -80,7 +80,7 @@ describe('GET /admin/dashboard/overview', () => {
   it('returns dashboard metrics for an authenticated admin', async () => {
     const response = await getOverview().expect(200);
 
-    expect(response.body.data.data).toEqual(overview);
+    expect(response.body.data).toEqual(overview);
     expect(AuthRepository.findActiveSession).toHaveBeenCalledWith(
       'session-id',
       'admin-id',

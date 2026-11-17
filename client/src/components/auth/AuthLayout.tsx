@@ -9,7 +9,7 @@ interface AuthLayoutProps {
 
 export const AuthLayout = ({ title, description, children, footer }: AuthLayoutProps) => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-10">
+    <div className="flex min-h-screen items-center justify-center bg-transparent px-4 py-10">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-gray-900">Video Platform</h1>
