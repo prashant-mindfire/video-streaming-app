@@ -45,7 +45,7 @@ export const createPlaybackSession = async (videoId: string) => {
 };
 
 export const createDownloadLink = async (videoId: string) => {
-  const { data } = await http.get(`/videos/${videoId}/download-links`);
+  const { data } = await http.post(`/videos/${videoId}/download-links`);
 
   return data.data;
 };

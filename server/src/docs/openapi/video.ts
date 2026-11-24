@@ -342,7 +342,7 @@
  *         description: Video not found
  *
  * /videos/{videoId}/download-links:
- *   get:
+ *   post:
  *     summary: Get a temporary video download link
  *     tags: [Videos]
  *     security:
