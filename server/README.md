@@ -59,6 +59,34 @@ Optional upload settings (defaults shown):
 | `UPLOAD_URL_EXPIRY_SECONDS` | `900` | Lifetime of presigned upload/download URLs where applicable. |
 | `UPLOAD_INITIAL_BATCH_SIZE` | `5` | Number of part URLs returned when an upload is initiated. |
 
+## Database Migrations & Seeding
+
+All database schema definitions, foreign key constraints, cascade rules, query indexes, and seed scripts live in `server/db/`.
+
+### Prerequisites
+Ensure `DATABASE_URL` is configured in your environment file (`.env.dev` for local development or passed via environment variables in CI/production):
+```env
+DATABASE_URL=postgres://admin:your_password@localhost:5432/video_streaming_app
+```
+
+### Available Commands (run inside `server/`)
+
+| Command | Description |
+| :--- | :--- |
+| `npm run db:setup` | Runs all pending migrations (`db:up`) and populates initial sample data (`db:seed`). |
+| `npm run db:up` | Applies all pending SQL migrations in `server/db/migrations/`. |
+| `npm run db:down` | Rolls back the most recently applied migration. |
+| `npm run db:status` | Performs a dry run showing which migrations are pending without modifying the database. |
+| `npm run db:seed` | Populates idempotent development/test records (`users`, `videos`, `video_variants`, `video_events`). |
+| `npm run db:create -- <name>` | Generates a new timestamped `.sql` migration file in `server/db/migrations/`. |
+
+### Quick Start for New Developers & CI
+```bash
+cd server
+npm install
+npm run db:setup
+```
+
 ## Scripts
 
 | Command | Description |
