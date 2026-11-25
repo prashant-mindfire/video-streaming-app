@@ -7,14 +7,7 @@ interface VideoUploadProps {
 }
 
 const VideoUpload = ({ onUploadComplete }: VideoUploadProps) => {
-  const {
-    uploads,
-    isUploading,
-    addFiles,
-    startUploads,
-    removeQueuedItem,
-    // clearCompleted,
-  } = useVideoUpload();
+  const { uploads, isUploading, addFiles, startUploads, removeQueuedItem } = useVideoUpload();
 
   const queuedCount = uploads.filter((item) => item.status === 'queued').length;
 
@@ -30,11 +23,7 @@ const VideoUpload = ({ onUploadComplete }: VideoUploadProps) => {
     <div>
       <FileDropzone onFilesSelected={addFiles} disabled={isUploading} />
 
-      <UploadQueue
-        uploads={uploads}
-        onRemove={removeQueuedItem}
-        // onClearCompleted={clearCompleted}
-      />
+      <UploadQueue uploads={uploads} onRemove={removeQueuedItem} />
 
       {queuedCount > 0 && (
         <div className="mt-6 flex justify-end">

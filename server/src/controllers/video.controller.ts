@@ -3,12 +3,10 @@ import type { Request, Response } from 'express';
 import * as VideoService from '@/services/video.service';
 import { responseHandler } from '@/utils/responseHandler';
 
-export const getVideos = async (req: Request<{}, {}, listVideosQueryInput>, res: Response) => {
+export const getVideos = async (req: Request<{}, {}, {}, listVideosQueryInput>, res: Response) => {
   const result = await VideoService.listVideos({
     userId: req.auth!.userId,
     ...req.query,
-    page: 1,
-    pageSize: 10,
   });
 
   responseHandler(res, 200, 'Videos fetched successfully', {

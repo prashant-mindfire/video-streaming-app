@@ -20,18 +20,19 @@ import * as UserController from '../controllers/user.controller';
 import * as AuthMiddleware from '../middlewares/auth.middleware';
 import * as ValidationMiddleware from '../middlewares/validation.middleware';
 import { streamAssetSchema } from '@/schemas/stream-asset.schema';
+import { authRateLimiter, uploadRateLimiter } from '@/middlewares/rateLimit.middleware';
 
 const router = Router();
 
 // Authentication APIs
 router.post(
   '/auth/users',
-  ValidationMiddleware.validateRequest(registerSchema),
+  [authRateLimiter, ValidationMiddleware.validateRequest(registerSchema)],
   AuthController.registerUser,
 );
 router.post(
   '/auth/sessions',
-  ValidationMiddleware.validateRequest(loginSchema),
+  [authRateLimiter, ValidationMiddleware.validateRequest(loginSchema)],
   AuthController.loginUser,
 );
 router.delete('/auth/sessions/current', AuthMiddleware.authenticate, AuthController.logoutUser);
@@ -42,7 +43,11 @@ router.get('/users/me', AuthMiddleware.authenticate, UserController.getCurrentUs
 // Uploads
 router.post(
   '/videos/uploads',
-  [AuthMiddleware.authenticate, ValidationMiddleware.validateRequest(initiateUploadSchema)],
+  [
+    uploadRateLimiter,
+    AuthMiddleware.authenticate,
+    ValidationMiddleware.validateRequest(initiateUploadSchema),
+  ],
   UploadController.initiateUpload,
 );
 router.post(
@@ -98,7 +103,7 @@ router.post(
   [AuthMiddleware.authenticate, ValidationMiddleware.validateRequest(getVideoParamsSchema)],
   VideoController.createPlaybackSession,
 );
-router.get(
+router.post(
   '/videos/:videoId/download-links',
   [AuthMiddleware.authenticate, ValidationMiddleware.validateRequest(getVideoParamsSchema)],
   VideoController.getVideoDownloadLink,

@@ -5,6 +5,7 @@ import type { LoginUserInput, RegisterUserInput } from '@/schemas/auth.schema';
 import { AppError } from '@/utils/app.error';
 import { cookieOptions } from '@/utils/cookie';
 import { SESSION_DURATION_DAYS } from '@/utils/constants';
+import { clearCsrfCookie, issueCsrfCookie } from '@/middlewares/csrf.middleware';
 
 export const registerUser = async (
   req: Request<{}, {}, RegisterUserInput>,
@@ -24,11 +25,14 @@ export const loginUser = async (
   const { email, password } = req.body;
 
   const result = await AuthService.loginUser(email, password);
+  const maxAge = SESSION_DURATION_DAYS * 24 * 60 * 60 * 1000;
 
   res.cookie('session', result.token, {
     ...cookieOptions,
-    maxAge: SESSION_DURATION_DAYS * 24 * 60 * 60 * 1000,
+    maxAge,
   });
+
+  issueCsrfCookie(res, maxAge);
 
   responseHandler(res, 200, 'Login successful', {
     user: result.user,
@@ -44,6 +48,7 @@ export const logoutUser = async (req: Request, res: Response) => {
 
   await AuthService.logoutUser(sessionId);
   res.clearCookie('session', cookieOptions);
+  clearCsrfCookie(res);
 
   responseHandler(res, 200, 'Logout successful', {});
 };

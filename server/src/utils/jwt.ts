@@ -1,3 +1,4 @@
+import type { Request } from 'express';
 import jwt from 'jsonwebtoken';
 import { AppError } from './app.error';
 
@@ -30,4 +31,13 @@ export const verifyToken = (token: string): jwt.JwtPayload | null => {
   } catch {
     return null;
   }
+};
+
+export const extractToken = (req: Request): string | undefined => {
+  const authHeader = req.headers.authorization;
+  if (authHeader?.startsWith('Bearer ')) {
+    const bearerToken = authHeader.slice(7).trim();
+    if (bearerToken) return bearerToken;
+  }
+  return req.cookies?.session;
 };

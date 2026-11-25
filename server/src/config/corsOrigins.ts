@@ -1,9 +1,6 @@
 import type { CorsOptions } from 'cors';
 
-const allowedOrigins: string[] = [
-  ...(process.env.ALLOWED_ORIGINS?.split(',') || []),
-  ...(process.env.API_VERSION ? [`/api/${process.env.API_VERSION}`] : []),
-];
+export const allowedOrigins: string[] = [...(process.env.ALLOWED_ORIGINS?.split(',') || [])];
 
 const corsOrigins: CorsOptions = {
   origin: (
@@ -17,7 +14,7 @@ const corsOrigins: CorsOptions = {
     }
   },
   credentials: true,
-  optionsSuccessStatus: 200,
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
 };
 
 export default corsOrigins;

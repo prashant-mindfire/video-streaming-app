@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import { verifyToken } from '../utils/jwt';
+import { extractToken, verifyToken } from '../utils/jwt';
 import * as AuthRepository from '../repositories/auth.repository';
 import { AppError } from '../utils/app.error';
 
@@ -8,7 +8,7 @@ export const authenticate = async (
   _res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  const token = req.cookies?.session;
+  const token = extractToken(req);
   if (!token) throw new AppError('Authentication required', 401);
 
   // Calls our safe function. No try/catch needed here anymore!

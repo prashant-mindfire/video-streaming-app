@@ -4,7 +4,7 @@ import { Button } from '@/components/common';
 
 const NotFound = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-6">
+    <div className="flex min-h-screen items-center justify-center bg-transparent px-6">
       <div className="w-full max-w-lg text-center">
         <div className="mb-6 flex justify-center">
           <div className="flex h-20 w-20 items-center justify-center rounded-full bg-blue-100">

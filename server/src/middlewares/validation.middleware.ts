@@ -15,14 +15,11 @@ export const validateRequest = (schema: ZodObject) => {
       req.body = parsed.body;
 
       if (parsed.query) {
-        Object.getOwnPropertyNames(req.query).forEach((key) => {
-          Object.defineProperty(req.query, key, {
-            value: undefined,
-            writable: true,
-            configurable: true,
-          });
+        Object.defineProperty(req, 'query', {
+          value: parsed.query,
+          writable: true,
+          configurable: true,
         });
-        Object.assign(req.query, parsed.query);
       }
 
       if (parsed.params) {

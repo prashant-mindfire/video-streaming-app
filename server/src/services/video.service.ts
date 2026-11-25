@@ -5,17 +5,17 @@ import { getVideoProgress } from './video-progress.service';
 import { URL_EXPIRY_SECONDS } from '@/utils/constants';
 import { createPlaybackAccess, type PlaybackAccessResponse } from './playback-access.service';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
-import { RUSTFS_BUCKET_NAME, s3Client } from '@/config/rustfs';
+import { RUSTFS_BUCKET_NAME, s3PresignClient } from '@/config/rustfs';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 interface ListVideosParams {
   userId: string;
-  search?: string;
-  status?: string;
+  search?: string | undefined;
+  status?: string | undefined;
   page: number;
   pageSize: number;
-  sortBy?: string;
-  sortOrder?: string;
+  sortBy?: string | undefined;
+  sortOrder?: string | undefined;
 }
 
 const allowedSortFields = ['created_at', 'title', 'file_size'] as const;
@@ -25,6 +25,7 @@ const semanticSorts = {
   title: { sortBy: 'title', sortOrder: 'ASC' },
 } as const;
 
+/** Lists the user's videos while mapping semantic sort names to allowlisted repository fields. */
 export const listVideos = async (params: ListVideosParams) => {
   const { pageSize, ...repositoryParams } = params;
   const semanticSort = params.sortBy
@@ -53,7 +54,7 @@ export const listVideos = async (params: ListVideosParams) => {
     result.videos.map(async (video) => {
       const thumbnailUrl = video.thumbnail_object_key
         ? await getSignedUrl(
-            s3Client,
+            s3PresignClient,
             new GetObjectCommand({
               Bucket: RUSTFS_BUCKET_NAME,
               Key: video.thumbnail_object_key,
@@ -159,6 +160,7 @@ export const getProcessingStatus = async (videoId: string, userId: string) => {
   };
 };
 
+/** Creates playback access only when the owner-scoped video is ready and has an HLS master playlist. */
 export const createVideoPlaybackSession = async (
   videoId: string,
   userId: string,

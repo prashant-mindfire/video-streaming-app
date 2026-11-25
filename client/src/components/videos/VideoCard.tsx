@@ -76,7 +76,9 @@ export const VideoCard = ({
 
         <div className="flex justify-between text-xs text-gray-500">
           <span>{formatFileSize(video.fileSize)}</span>
-          <span>{video.resolution ?? 'Resolution pending'}</span>
+          <span>
+            {video.width && video.height ? `${video.width}x${video.height}` : 'Resolution pending'}
+          </span>
         </div>
 
         {video.status === 'processing' && <ProcessingProgress videoId={video.id} />}
