@@ -3,7 +3,7 @@
 services:
   # Backend
   server:
-    image: video-streaming-server:prod
+    image: video-streaming-server:dev
     build:
       context: ./server
       dockerfile: Dockerfile.dev
@@ -17,9 +17,9 @@ services:
       - "5000:5000"
     depends_on:
       postgres:
-        condition: service_started
+        condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
       rustfs:
         condition: service_started
       rabbitmq:
@@ -46,7 +46,7 @@ services:
 
   # Outbox runner
   outbox:
-    image: video-streaming-server:prod
+    image: video-streaming-server:dev
     pull_policy: never
     volumes:
       - ./server:/app
@@ -58,14 +58,14 @@ services:
       server:
         condition: service_started
       postgres:
-        condition: service_started
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
     restart: unless-stopped
 
   # Video processing worker
   worker:
-    image: video-streaming-server:prod
+    image: video-streaming-server:dev
     pull_policy: never
     volumes:
       - ./server:/app
@@ -77,13 +77,13 @@ services:
       server:
         condition: service_started
       postgres:
-        condition: service_started
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
       rustfs:
         condition: service_started
       redis:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
 
   # PostgreSQL database
@@ -98,6 +98,12 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   rabbitmq:
     image: rabbitmq:4-management
@@ -127,16 +133,23 @@ services:
     volumes:
       - redis_data:/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Redis insight GUI
   redisinsight:
     image: redis/redisinsight:latest
+    profiles: ["debug"]
     ports:
       - "5540:5540"
     volumes:
       - redisinsight_data:/data
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     restart: unless-stopped
 
   # RustFs Permission Fixer (Runs once before RustFs starts)
