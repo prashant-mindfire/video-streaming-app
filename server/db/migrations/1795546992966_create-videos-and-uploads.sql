@@ -1,5 +1,5 @@
 -- Up Migration
-CREATE TABLE public.video_uploads (
+CREATE TABLE IF NOT EXISTS public.video_uploads (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     user_id uuid NOT NULL,
     original_filename character varying(500) NOT NULL,
@@ -21,7 +21,7 @@ CREATE TABLE public.video_uploads (
     CONSTRAINT video_uploads_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE public.videos (
+CREATE TABLE IF NOT EXISTS public.videos (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     user_id uuid NOT NULL,
     upload_id uuid,
@@ -45,7 +45,7 @@ CREATE TABLE public.videos (
     CONSTRAINT videos_upload_id_fkey FOREIGN KEY (upload_id) REFERENCES public.video_uploads(id) ON DELETE SET NULL
 );
 
-CREATE TABLE public.video_variants (
+CREATE TABLE IF NOT EXISTS public.video_variants (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     video_id uuid NOT NULL,
     resolution character varying(10) NOT NULL,
@@ -66,17 +66,17 @@ CREATE TABLE public.video_variants (
     CONSTRAINT video_variants_video_id_fkey FOREIGN KEY (video_id) REFERENCES public.videos(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_video_uploads_status ON public.video_uploads USING btree (status);
-CREATE INDEX idx_video_uploads_user_id ON public.video_uploads USING btree (user_id);
+CREATE INDEX IF NOT EXISTS idx_video_uploads_status ON public.video_uploads USING btree (status);
+CREATE INDEX IF NOT EXISTS idx_video_uploads_user_id ON public.video_uploads USING btree (user_id);
 
-CREATE INDEX idx_videos_created_at ON public.videos USING btree (created_at DESC);
-CREATE INDEX idx_videos_duration ON public.videos USING btree (duration_seconds);
-CREATE INDEX idx_videos_resolution ON public.videos USING btree (width, height);
-CREATE INDEX idx_videos_status ON public.videos USING btree (status);
-CREATE INDEX idx_videos_user_id ON public.videos USING btree (user_id);
+CREATE INDEX IF NOT EXISTS idx_videos_created_at ON public.videos USING btree (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_videos_duration ON public.videos USING btree (duration_seconds);
+CREATE INDEX IF NOT EXISTS idx_videos_resolution ON public.videos USING btree (width, height);
+CREATE INDEX IF NOT EXISTS idx_videos_status ON public.videos USING btree (status);
+CREATE INDEX IF NOT EXISTS idx_videos_user_id ON public.videos USING btree (user_id);
 
-CREATE INDEX idx_video_variants_status ON public.video_variants USING btree (status);
-CREATE INDEX idx_video_variants_video_id ON public.video_variants USING btree (video_id);
+CREATE INDEX IF NOT EXISTS idx_video_variants_status ON public.video_variants USING btree (status);
+CREATE INDEX IF NOT EXISTS idx_video_variants_video_id ON public.video_variants USING btree (video_id);
 
 -- Down Migration
 DROP TABLE IF EXISTS public.video_variants;

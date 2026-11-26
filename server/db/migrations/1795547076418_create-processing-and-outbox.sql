@@ -1,5 +1,5 @@
 -- Up Migration
-CREATE TABLE public.processing_jobs (
+CREATE TABLE IF NOT EXISTS public.processing_jobs (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     video_id uuid NOT NULL,
     job_type character varying(50) DEFAULT 'video_processing'::character varying NOT NULL,
@@ -20,7 +20,7 @@ CREATE TABLE public.processing_jobs (
     CONSTRAINT processing_jobs_video_id_fkey FOREIGN KEY (video_id) REFERENCES public.videos(id) ON DELETE CASCADE
 );
 
-CREATE TABLE public.processing_job_attempts (
+CREATE TABLE IF NOT EXISTS public.processing_job_attempts (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     job_id uuid NOT NULL,
     attempt_number integer NOT NULL,
@@ -34,7 +34,7 @@ CREATE TABLE public.processing_job_attempts (
     CONSTRAINT processing_job_attempts_job_id_fkey FOREIGN KEY (job_id) REFERENCES public.processing_jobs(id) ON DELETE CASCADE
 );
 
-CREATE TABLE public.outbox_events (
+CREATE TABLE IF NOT EXISTS public.outbox_events (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     job_id uuid NOT NULL,
     event_type character varying(100) NOT NULL,
@@ -49,11 +49,11 @@ CREATE TABLE public.outbox_events (
     CONSTRAINT outbox_events_job_id_fkey FOREIGN KEY (job_id) REFERENCES public.processing_jobs(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_processing_jobs_created_at ON public.processing_jobs USING btree (created_at DESC);
-CREATE INDEX idx_processing_jobs_status ON public.processing_jobs USING btree (status);
-CREATE INDEX idx_processing_jobs_video_id ON public.processing_jobs USING btree (video_id);
-CREATE INDEX idx_job_attempts_job_id ON public.processing_job_attempts USING btree (job_id);
-CREATE INDEX idx_outbox_events_pending ON public.outbox_events USING btree (available_at, created_at) WHERE ((status)::text = 'pending'::text);
+CREATE INDEX IF NOT EXISTS idx_processing_jobs_created_at ON public.processing_jobs USING btree (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_processing_jobs_status ON public.processing_jobs USING btree (status);
+CREATE INDEX IF NOT EXISTS idx_processing_jobs_video_id ON public.processing_jobs USING btree (video_id);
+CREATE INDEX IF NOT EXISTS idx_job_attempts_job_id ON public.processing_job_attempts USING btree (job_id);
+CREATE INDEX IF NOT EXISTS idx_outbox_events_pending ON public.outbox_events USING btree (available_at, created_at) WHERE ((status)::text = 'pending'::text);
 
 -- Down Migration
 DROP TABLE IF EXISTS public.outbox_events;
