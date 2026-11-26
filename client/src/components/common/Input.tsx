@@ -37,7 +37,7 @@ export const Input = <T extends FieldValues>({
 
       <div className="relative">
         {leftIcon && (
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">{leftIcon}</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600">{leftIcon}</span>
         )}
 
         <input
@@ -52,7 +52,7 @@ export const Input = <T extends FieldValues>({
           className={`
             w-full rounded-lg border bg-white px-3 py-2.5
             text-sm text-gray-900 outline-none transition
-            placeholder:text-gray-400
+            placeholder:text-gray-600
             focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100
             disabled:cursor-not-allowed disabled:bg-gray-100
             ${leftIcon ? 'pl-10' : ''}

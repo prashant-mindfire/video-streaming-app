@@ -1,12 +1,12 @@
-import UploadItem from './UploadItem';
 import type { UploadQueueItem } from '@/types/upload';
+import { UploadItem } from './UploadItem';
 
 interface UploadQueueProps {
   uploads: UploadQueueItem[];
-  onRemove: (id: string) => void;
+  onRemove?: (id: string) => void;
 }
 
-const UploadQueue = ({ uploads, onRemove }: UploadQueueProps) => {
+const UploadQueue = ({ uploads }: UploadQueueProps) => {
   if (uploads.length === 0) return null;
 
   return (
@@ -17,7 +17,7 @@ const UploadQueue = ({ uploads, onRemove }: UploadQueueProps) => {
 
       <div className="space-y-3">
         {uploads.map((upload) => (
-          <UploadItem key={upload.id} upload={upload} onRemove={onRemove} />
+          <UploadItem key={upload.id} upload={upload} />
         ))}
       </div>
     </div>
