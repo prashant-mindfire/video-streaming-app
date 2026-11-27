@@ -8,6 +8,7 @@
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
+    "test:coverage": "npm run test:coverage --workspaces --if-present",
     "prepare": "husky",
     "format": "prettier --write \"client/src/**/*.{ts,tsx,css,json}\" \"server/src/**/*.{ts,json}\"",
     "format:check": "prettier --check \"client/src/**/*.{ts,tsx,css,json}\" \"server/src/**/*.{ts,json}\""
@@ -25,6 +26,8 @@
   },
   "homepage": "https://github.com/prashant-mindfire/video-streaming-app#readme",
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
+    "@types/node": "^26.6.11",
     "concurrently": "^10.0.7",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
