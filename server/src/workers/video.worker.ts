@@ -151,8 +151,10 @@ export const startVideoWorker = async () => {
   process.once('SIGTERM', () => shutdown('SIGTERM'));
 };
 
-startVideoWorker().catch(async (error) => {
-  logger.error('Something went wrong in start video worker:', error);
-  await closeRabbitMQ();
-  await closePool();
-});
+if (process.env.NODE_ENV !== 'test') {
+  startVideoWorker().catch(async (error) => {
+    logger.error('Something went wrong in start video worker:', error);
+    await closeRabbitMQ();
+    await closePool();
+  });
+}
