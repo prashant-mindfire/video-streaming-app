@@ -102,7 +102,7 @@
 
 /**
  * @openapi
- * /uploads/{uploadId}/parts/upload-urls:
+ * /videos/uploads/{uploadId}/parts/upload-urls:
  *   post:
  *     summary: Generate presigned URLs for upload parts
  *     tags: [Uploads]
@@ -158,6 +158,50 @@
  *                       type: array
  *                       items:
  *                         $ref: '#/components/schemas/PresignedUploadPart'
+ *       '400':
+ *         description: Invalid or duplicate part numbers, upload inactive, or upload expired
+ *       '401':
+ *         description: Authentication required or session invalid
+ *       '404':
+ *         description: Upload not found
+ */
+
+/**
+ * @openapi
+ * /uploads/{uploadId}/parts/upload-urls:
+ *   post:
+ *     deprecated: true
+ *     summary: Generate presigned URLs for upload parts (legacy path)
+ *     description: Use /videos/uploads/{uploadId}/parts/upload-urls instead. The request and response schemas are identical.
+ *     tags: [Uploads]
+ *     security:
+ *       - sessionCookie: []
+ *     parameters:
+ *       - name: uploadId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [partNumbers]
+ *             properties:
+ *               partNumbers:
+ *                 type: array
+ *                 minItems: 1
+ *                 maxItems: 100
+ *                 uniqueItems: true
+ *                 items:
+ *                   type: integer
+ *                   minimum: 1
+ *     responses:
+ *       '200':
+ *         description: Same response as the canonical upload-part URL endpoint
  *       '400':
  *         description: Invalid or duplicate part numbers, upload inactive, or upload expired
  *       '401':

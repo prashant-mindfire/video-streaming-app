@@ -5,6 +5,8 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
+let isPoolClosed = false;
+
 const connectDB = async () => {
   try {
     await pool.query('SELECT 1');
@@ -15,4 +17,12 @@ const connectDB = async () => {
   }
 };
 
-export { connectDB, pool };
+const closePool = async (): Promise<void> => {
+  if (isPoolClosed) return;
+  isPoolClosed = true;
+
+  await pool.end();
+  logger.info('Postgres connection pool closed');
+};
+
+export { connectDB, closePool, pool };

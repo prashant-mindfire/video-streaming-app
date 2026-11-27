@@ -1,21 +1,22 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Hls from 'hls.js';
-import { X, LoaderCircle, Settings } from 'lucide-react';
-import { Button } from '../common';
+import { X, LoaderCircle } from 'lucide-react';
+import VideoQualityMenu, { type QualityLevel } from './VideoQualityMenu';
+import useVideoKeyboardShortcuts from '@/hooks/useVideoKeyboardShortcuts';
+import { Button, Dialog } from '../common';
+import type { VideoCaption } from '@/types/video';
+import CaptionControls from './CaptionControls';
 
 interface VideoPlayerProps {
   videoUrl: string;
   title: string;
   onClose: () => void;
+  captions?: VideoCaption[];
 }
 
-interface QualityLevel {
-  index: number;
-  label: string;
-  height: number;
-}
-
-const VideoPlayer = ({ videoUrl, title, onClose }: VideoPlayerProps) => {
+const VideoPlayer = ({ videoUrl, title, onClose, captions }: VideoPlayerProps) => {
+  const [isVideoMounted, setIsVideoMounted] = useState(false);
+  const playerContainerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
 
@@ -26,11 +27,21 @@ const VideoPlayer = ({ videoUrl, title, onClose }: VideoPlayerProps) => {
   const [qualityLevels, setQualityLevels] = useState<QualityLevel[]>([]);
   const [selectedLevel, setSelectedLevel] = useState<number>(-1);
   const [activeAutoHeight, setActiveAutoHeight] = useState<number | null>(null);
-  const [isQualityMenuOpen, setIsQualityMenuOpen] = useState(false);
+
+  // Keyboard shortcuts
+  useVideoKeyboardShortcuts({
+    containerRef: playerContainerRef,
+    videoRef,
+  });
+
+  const setVideoNode = useCallback((node: HTMLVideoElement | null) => {
+    videoRef.current = node;
+    setIsVideoMounted(Boolean(node));
+  }, []);
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !videoUrl) return;
+    if (!isVideoMounted || !video || !videoUrl) return;
 
     setIsLoading(true);
     setHasError(false);
@@ -47,7 +58,9 @@ const VideoPlayer = ({ videoUrl, title, onClose }: VideoPlayerProps) => {
 
     const handleError = () => {
       if (isCleanedUp) return;
+
       console.error('Native video element error:', video.error);
+
       setIsLoading(false);
       setHasError(true);
     };
@@ -69,6 +82,7 @@ const VideoPlayer = ({ videoUrl, title, onClose }: VideoPlayerProps) => {
       // Read available resolutions from master.m3u8
       hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
         if (isCleanedUp) return;
+
         setIsLoading(false);
 
         const parsedLevels: QualityLevel[] = data.levels
@@ -83,10 +97,12 @@ const VideoPlayer = ({ videoUrl, title, onClose }: VideoPlayerProps) => {
         setQualityLevels(parsedLevels);
       });
 
-      // rack which resolution HLS.js automatically picks in "Auto" mode
+      // Track which resolution HLS.js automatically picks in "Auto" mode
       hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => {
         if (isCleanedUp || !hls) return;
+
         const current = hls.levels[data.level];
+
         if (current?.height) {
           setActiveAutoHeight(current.height);
         }
@@ -100,10 +116,15 @@ const VideoPlayer = ({ videoUrl, title, onClose }: VideoPlayerProps) => {
           response: data.response,
           url: data.url,
         });
+
         if (data.fatal && !isCleanedUp) {
           setHasError(true);
           setIsLoading(false);
           hls?.destroy();
+
+          if (hlsRef.current === hls) {
+            hlsRef.current = null;
+          }
         }
       });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
@@ -115,22 +136,29 @@ const VideoPlayer = ({ videoUrl, title, onClose }: VideoPlayerProps) => {
 
     return () => {
       isCleanedUp = true;
+
       video.removeEventListener('loadedmetadata', handleLoaded);
       video.removeEventListener('error', handleError);
 
       if (hls) {
         hls.destroy();
-        hlsRef.current = null;
+
+        if (hlsRef.current === hls) {
+          hlsRef.current = null;
+        }
       }
+
       video.pause();
       video.removeAttribute('src');
       video.load();
     };
-  }, [videoUrl]);
+  }, [isVideoMounted, videoUrl]);
 
-  const handleQualityChange = (levelIndex: number) => {
+  // Handle quality selection
+  const handleQualityChange = (value: string) => {
+    const levelIndex = Number(value);
+
     setSelectedLevel(levelIndex);
-    setIsQualityMenuOpen(false);
 
     if (hlsRef.current) {
       // Setting currentLevel = -1 re-enables automatic bandwidth adaptation.
@@ -147,92 +175,101 @@ const VideoPlayer = ({ videoUrl, title, onClose }: VideoPlayerProps) => {
       : (qualityLevels.find((q) => q.index === selectedLevel)?.label ?? 'Auto');
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
-      onClick={onClose}
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+      title={`Video player: ${title}`}
+      description="Use the video controls or keyboard shortcuts to control playback."
+      hideHeader
+      showCloseButton={false}
+      contentClassName="!max-w-4xl !overflow-visible !border-0 !bg-black !p-0"
     >
       <div
-        className="w-full max-w-4xl overflow-hidden rounded-xl bg-black shadow-2xl"
-        onClick={(event) => event.stopPropagation()}
+        ref={playerContainerRef}
+        tabIndex={0}
+        role="group"
+        aria-label={`${title} video player`}
+        aria-describedby="video-player-shortcuts"
+        className="w-full overflow-hidden rounded-xl bg-black outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
       >
         <div className="flex items-center justify-between bg-gray-900 px-4 py-3">
           <h2 className="truncate text-sm font-semibold text-white">{title}</h2>
 
           <div className="flex items-center gap-2">
-            {qualityLevels.length > 0 && (
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setIsQualityMenuOpen((prev) => !prev)}
-                  className="flex items-center gap-1.5 rounded-md bg-gray-800 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-gray-700"
-                  aria-label="Select video quality"
-                >
-                  <Settings size={14} />
-                  <span>{currentQualityLabel}</span>
-                </button>
-
-                {isQualityMenuOpen && (
-                  <div className="absolute right-0 z-20 mt-1.5 w-36 overflow-hidden rounded-lg border border-gray-700 bg-gray-900 py-1 shadow-xl">
-                    <button
-                      type="button"
-                      onClick={() => handleQualityChange(-1)}
-                      className={`flex w-full items-center justify-between px-3 py-1.5 text-left text-xs hover:bg-gray-800 ${
-                        selectedLevel === -1 ? 'font-semibold text-blue-400' : 'text-gray-200'
-                      }`}
-                    >
-                      <span>Auto</span>
-                      {selectedLevel === -1 && <span>✓</span>}
-                    </button>
-
-                    {qualityLevels.map((level) => (
-                      <button
-                        key={level.index}
-                        type="button"
-                        onClick={() => handleQualityChange(level.index)}
-                        className={`flex w-full items-center justify-between px-3 py-1.5 text-left text-xs hover:bg-gray-800 ${
-                          selectedLevel === level.index
-                            ? 'font-semibold text-blue-400'
-                            : 'text-gray-200'
-                        }`}
-                      >
-                        <span>{level.label}</span>
-                        {selectedLevel === level.index && <span>✓</span>}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+            <VideoQualityMenu
+              qualityLevels={qualityLevels}
+              selectedLevel={selectedLevel}
+              currentQualityLabel={currentQualityLabel}
+              onQualityChange={handleQualityChange}
+            />
+            <CaptionControls videoRef={videoRef} />
 
             <Button
+              type="button"
               onClick={onClose}
-              className="rounded-md p-2 text-white hover:bg-gray-700"
               aria-label="Close video player"
+              className="rounded-md p-2 text-white outline-none hover:bg-gray-700 focus-visible:ring-2 focus-visible:ring-blue-400"
             >
-              <X size={20} />
+              <X size={20} aria-hidden="true" />
             </Button>
           </div>
         </div>
 
         <div className="relative aspect-video bg-black">
-          <video ref={videoRef} controls autoPlay muted playsInline className="h-full w-full" />
+          <video
+            ref={setVideoNode}
+            controls
+            autoPlay
+            muted
+            playsInline
+            preload="metadata"
+            aria-label={title}
+            className="h-full w-full"
+          >
+            {captions?.map((caption) => (
+              <track
+                key={caption.id}
+                kind="captions"
+                src={caption.url}
+                srcLang={caption.languageCode}
+                label={caption.label}
+                default={caption.isDefault}
+              />
+            ))}
+            Your browser does not support HTML video.
+          </video>
 
           {isLoading && !hasError && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <LoaderCircle className="h-8 w-8 animate-spin text-white" />
+            <div
+              role="status"
+              aria-live="polite"
+              className="absolute inset-0 flex items-center justify-center"
+            >
+              <LoaderCircle className="h-8 w-8 animate-spin text-white" aria-hidden="true" />
+              <span className="sr-only">Loading video...</span>
             </div>
           )}
 
           {hasError && (
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div
+              role="alert"
+              className="absolute inset-0 flex items-center justify-center bg-black/80"
+            >
               <p className="text-sm text-white">
                 Unable to play this video. Please try again later.
               </p>
             </div>
           )}
         </div>
+
+        <p id="video-player-shortcuts" className="sr-only">
+          Keyboard shortcuts: Space or K to play or pause, M to mute or unmute, F to toggle
+          fullscreen, and left or right arrow keys to seek backward or forward by five seconds.
+        </p>
       </div>
-    </div>
+    </Dialog>
   );
 };
 

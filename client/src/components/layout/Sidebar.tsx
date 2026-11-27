@@ -20,7 +20,7 @@ const Sidebar = () => {
       </div>
 
       <nav className="space-y-2 p-4">
-        <p className="mb-3 px-3 text-xs font-semibold uppercase text-gray-400">Workspace</p>
+        <p className="mb-3 px-3 text-xs font-semibold uppercase text-gray-600">Workspace</p>
 
         {links.map(({ label, path, icon: Icon }) => (
           <NavLink

@@ -1,7 +1,7 @@
 -- Up Migration
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
-CREATE TABLE public.users (
+CREATE TABLE IF NOT EXISTS public.users (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     name character varying(150) NOT NULL,
     email character varying(255) NOT NULL,
@@ -14,7 +14,7 @@ CREATE TABLE public.users (
     CONSTRAINT users_role_check CHECK (((role)::text = ANY ((ARRAY['user'::character varying, 'admin'::character varying])::text[])))
 );
 
-CREATE TABLE public.auth_sessions (
+CREATE TABLE IF NOT EXISTS public.auth_sessions (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     user_id uuid NOT NULL,
     expires_at timestamp with time zone NOT NULL,
@@ -24,8 +24,8 @@ CREATE TABLE public.auth_sessions (
     CONSTRAINT auth_sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_auth_sessions_active ON public.auth_sessions USING btree (id, user_id, expires_at) WHERE (revoked_at IS NULL);
-CREATE INDEX idx_auth_sessions_user_id ON public.auth_sessions USING btree (user_id);
+CREATE INDEX IF NOT EXISTS idx_auth_sessions_active ON public.auth_sessions USING btree (id, user_id, expires_at) WHERE (revoked_at IS NULL);
+CREATE INDEX IF NOT EXISTS idx_auth_sessions_user_id ON public.auth_sessions USING btree (user_id);
 
 -- Down Migration
 DROP TABLE IF EXISTS public.auth_sessions;

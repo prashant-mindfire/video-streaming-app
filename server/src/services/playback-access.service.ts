@@ -8,11 +8,20 @@ interface CreatePlaybackAccessParams {
   masterPlaylistKey: string;
 }
 
+export interface PlaybackCaption {
+  id: string;
+  languageCode: string;
+  label: string;
+  url: string;
+  isDefault: boolean;
+}
+
 export interface PlaybackAccessResponse {
   playbackToken: string;
   streamUrl: string;
   expiresIn: number;
   expiresAt: Date;
+  captions: PlaybackCaption[];
 }
 
 export interface PlaybackSessionData {

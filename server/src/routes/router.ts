@@ -51,7 +51,7 @@ router.post(
   UploadController.initiateUpload,
 );
 router.post(
-  '/uploads/:uploadId/parts/upload-urls',
+  ['/videos/uploads/:uploadId/parts/upload-urls', '/uploads/:uploadId/parts/upload-urls'],
   [AuthMiddleware.authenticate, ValidationMiddleware.validateRequest(generatePartUrlsSchema)],
   UploadController.generatePartUploadUrls,
 );

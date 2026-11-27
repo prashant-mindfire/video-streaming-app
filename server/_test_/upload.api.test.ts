@@ -40,7 +40,7 @@ app.post(
   initiateUpload,
 );
 app.post(
-  '/uploads/:uploadId/parts/upload-urls',
+  ['/videos/uploads/:uploadId/parts/upload-urls', '/uploads/:uploadId/parts/upload-urls'],
   authenticateTestUser,
   validateRequest(generatePartUrlsSchema),
   generatePartUploadUrls,
@@ -119,7 +119,7 @@ describe('POST /videos/uploads', () => {
   });
 });
 
-describe('POST /uploads/:uploadId/parts/upload-urls', () => {
+describe('POST upload part URLs', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(UploadService.generatePartUploadUrls).mockResolvedValue({
@@ -130,7 +130,7 @@ describe('POST /uploads/:uploadId/parts/upload-urls', () => {
 
   it('generates URLs for requested parts belonging to the authenticated user', async () => {
     const response = await request(app)
-      .post('/uploads/upload-id/parts/upload-urls')
+      .post('/videos/uploads/upload-id/parts/upload-urls')
       .send({ partNumbers: [1] })
       .expect(200);
 
@@ -138,9 +138,18 @@ describe('POST /uploads/:uploadId/parts/upload-urls', () => {
     expect(UploadService.generatePartUploadUrls).toHaveBeenCalledWith('owner-id', 'upload-id', [1]);
   });
 
-  it('rejects empty part lists before calling the service', async () => {
+  it('continues to support the legacy upload URL path', async () => {
     await request(app)
       .post('/uploads/upload-id/parts/upload-urls')
+      .send({ partNumbers: [1] })
+      .expect(200);
+
+    expect(UploadService.generatePartUploadUrls).toHaveBeenCalledWith('owner-id', 'upload-id', [1]);
+  });
+
+  it('rejects empty part lists before calling the service', async () => {
+    await request(app)
+      .post('/videos/uploads/upload-id/parts/upload-urls')
       .send({ partNumbers: [] })
       .expect(400);
 

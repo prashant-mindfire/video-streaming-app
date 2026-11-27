@@ -1,4 +1,4 @@
-# docker-compose.dev.yml
+# docker-compose.prod.yml
 
 services:
   # Backend
@@ -15,11 +15,11 @@ services:
     restart: unless-stopped
     depends_on:
       postgres:
-        condition: service_started
+        condition: service_healthy
       redis:
-        condition: service_started
-      rustfs:
-        condition: service_started
+        condition: service_healthy
+      rustfs_init:
+        condition: service_completed_successfully
       rabbitmq:
         condition: service_healthy
 
@@ -49,14 +49,16 @@ services:
       server:
         condition: service_started
       postgres:
-        condition: service_started
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
 
   # Video processing worker
   worker:
-    image: video-streaming-server:prod
-    pull_policy: never
+    image: video-streaming-worker:prod
+    build:
+      context: ./server
+      dockerfile: Dockerfile.worker
     command: npm run start:worker
     restart: unless-stopped
     env_file:
@@ -65,13 +67,13 @@ services:
       server:
         condition: service_started
       postgres:
-        condition: service_started
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
-      rustfs:
-        condition: service_started
+      rustfs_init:
+        condition: service_completed_successfully
       redis:
-        condition: service_started
+        condition: service_healthy
 
   # PostgreSQL database
   postgres:
@@ -85,6 +87,12 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   rabbitmq:
     image: rabbitmq:4-management
@@ -114,16 +122,23 @@ services:
     volumes:
       - redis_data:/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Redis insight GUI
   redisinsight:
     image: redis/redisinsight:latest
+    profiles: ["debug"]
     ports:
       - "5540:5540"
     volumes:
       - redisinsight_data:/data
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     restart: unless-stopped
 
   # RustFs Permission Fixer (Runs once before RustFs starts)
@@ -157,6 +172,26 @@ services:
       # Mandatory security credentials required to log in and allow backend access
       - RUSTFS_ACCESS_KEY=${RUSTFS_ACCESS_KEY}
       - RUSTFS_SECRET_KEY=${RUSTFS_SECRET_KEY}
+
+  # RustFS Automated Bucket Initialization (Runs once on first boot)
+  rustfs_init:
+    image: amazon/aws-cli:latest
+    depends_on:
+      rustfs:
+        condition: service_started
+    environment:
+      AWS_ACCESS_KEY_ID: ${RUSTFS_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${RUSTFS_SECRET_KEY}
+      AWS_DEFAULT_REGION: us-east-1
+    entrypoint: >
+      /bin/sh -c "
+      until aws --endpoint-url http://rustfs:9000 s3 ls >/dev/null 2>&1; do
+        echo 'Waiting for RustFS to be ready...';
+        sleep 2;
+      done;
+      aws --endpoint-url http://rustfs:9000 s3 mb s3://${RUSTFS_BUCKET_NAME} || true;
+      echo 'RustFS bucket (${RUSTFS_BUCKET_NAME}) initialization complete.';
+      "
 
 volumes:
   pgdata:

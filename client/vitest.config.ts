@@ -14,5 +14,16 @@ export default defineConfig({
     globals: true,
     setupFiles: './testSetup.ts',
     include: ['src/**/*.{test,spec}.{ts,tsx}', '_test_/**/*.{test,spec}.{ts,tsx}'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      exclude: ['node_modules/', 'dist/', '**/*.d.ts', '**/migrations/**'],
+      thresholds: {
+        lines: 70,
+        functions: 70,
+        branches: 60,
+        statements: 70,
+      },
+    },
   },
 });

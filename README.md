@@ -2,6 +2,31 @@
 
 A video streaming platform with a TypeScript/Express API and a React client. The server supports cookie-based authentication, multipart video uploads to S3-compatible RustFS storage, asynchronous video processing, and video playback/download APIs.
 
+## System architecture
+
+```mermaid
+flowchart LR
+    Client["Client (React + HLS.js)"]
+    API["Express API Server"]
+    S3["RustFS / S3 Object Storage"]
+    DB[("PostgreSQL")]
+    Outbox["Outbox Runner"]
+    MQ[["RabbitMQ"]]
+    Worker["FFmpeg Video Worker"]
+
+    Client -- "1. Request presigned part URLs" --> API
+    Client -- "2. Direct multipart upload (chunks)" --> S3
+    Client -- "3. Complete upload" --> API
+    API -- "4. Write video & outbox_events (TX)" --> DB
+    Outbox -- "5. Poll unpublished events (SKIP LOCKED)" --> DB
+    Outbox -- "6. Publish job message" --> MQ
+    MQ -- "7. Consume job" --> Worker
+    Worker -- "8. Download raw video" --> S3
+    Worker -- "9. Upload HLS segments & playlists" --> S3
+    Worker -- "10. Update status = ready" --> DB
+    Client -- "11. Stream adaptive HLS (.m3u8 / .ts)" --> S3
+```
+
 ## Repository layout
 
 - [`server/`](server/README.md) — Express API, background workers, and OpenAPI documentation.

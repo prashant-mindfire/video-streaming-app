@@ -19,7 +19,9 @@ export const generatePartUploadUrls = async (
   uploadId: string,
   partNumbers: number[],
 ): Promise<UploadPartsResponse> => {
-  const { data } = await http.post(`/uploads/${uploadId}/parts/upload-urls`, { partNumbers });
+  const { data } = await http.post(`/videos/uploads/${uploadId}/parts/upload-urls`, {
+    partNumbers,
+  });
 
   return data.data;
 };

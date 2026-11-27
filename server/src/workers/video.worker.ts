@@ -1,7 +1,7 @@
 import type { VideoProcessingMessage } from '@/types/processing';
-import { connectRabbitMQ, getRabbitMQConsumerChannel } from '../config/rabbitmq';
+import { closeRabbitMQ, connectRabbitMQ, getRabbitMQConsumerChannel } from '../config/rabbitmq';
 import { processVideo } from './video.processor';
-import { pool } from '@/config/db';
+import { closePool, pool } from '@/config/db';
 import logger from '@/utils/logger';
 
 const MAX_ATTEMPTS = 3;
@@ -11,13 +11,17 @@ export const startVideoWorker = async () => {
 
   const channel = getRabbitMQConsumerChannel();
 
+  let isShuttingDown = false;
+  let isProcessingJob = false;
+
   logger.info('Video worker started. Waiting for jobs...');
 
-  await channel.consume(
+  const { consumerTag } = await channel.consume(
     'video.processing',
     async (message) => {
       if (!message) return;
 
+      isProcessingJob = true;
       let job: VideoProcessingMessage;
 
       try {
@@ -111,12 +115,46 @@ export const startVideoWorker = async () => {
 
         // Acknowledge original only after routing it to retry or DLQ.
         channel.ack(message);
+      } finally {
+        isProcessingJob = false;
       }
     },
     { noAck: false },
   );
+
+  const shutdown = async (signal: string) => {
+    if (isShuttingDown) return;
+    isShuttingDown = true;
+
+    logger.info(`Received ${signal}, stopping video worker...`);
+
+    try {
+      // Stop RabbitMQ from delivering new jobs to this worker
+      await channel.cancel(consumerTag);
+    } catch (error) {
+      logger.error('Error cancelling RabbitMQ consumer:', error);
+    }
+
+    // Wait for any active FFmpeg transcoding + DB updates to finish before closing connections
+    while (isProcessingJob) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+
+    await closeRabbitMQ();
+    await closePool();
+
+    logger.info('Video worker shutdown complete');
+    process.exit(0);
+  };
+
+  process.once('SIGINT', () => shutdown('SIGINT'));
+  process.once('SIGTERM', () => shutdown('SIGTERM'));
 };
 
-startVideoWorker().catch((error) =>
-  logger.error('Something went wrong in start video worker:', error),
-);
+if (process.env.NODE_ENV !== 'test') {
+  startVideoWorker().catch(async (error) => {
+    logger.error('Something went wrong in start video worker:', error);
+    await closeRabbitMQ();
+    await closePool();
+  });
+}

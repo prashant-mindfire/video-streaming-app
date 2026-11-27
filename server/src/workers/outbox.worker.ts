@@ -12,6 +12,10 @@ export const publishOutboxEvents = async (): Promise<void> => {
             FOR UPDATE SKIP LOCKED`,
     );
 
+    if (result.rows.length === 0) {
+      return;
+    }
+
     const channel = getRabbitMQChannel();
 
     for (const event of result.rows) {

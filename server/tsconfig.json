@@ -8,6 +8,7 @@
     "module": "esnext",
     "target": "esnext",
     "lib": ["esnext"],
+    "types": ["node", "vitest/globals"],
 
     /* Other Outputs */
     "sourceMap": true,

@@ -38,6 +38,7 @@ export interface VideoDetail extends Video {
     codec?: string | null;
     fileSize: number;
   };
+  captions?: VideoCaption[];
 }
 
 export interface PaginatedVideos {
@@ -50,6 +51,7 @@ export interface PaginatedVideos {
 
 export interface PlaybackResponse {
   streamUrl: string;
+  captions: VideoCaption[];
 }
 
 export interface VideoProcessingStatus {
@@ -63,4 +65,12 @@ export interface VideoDownloadLink {
   downloadUrl: string;
   fileName: string;
   expiresAt: string;
+}
+
+export interface VideoCaption {
+  id: string;
+  languageCode: string;
+  label: string;
+  url: string;
+  isDefault: boolean;
 }

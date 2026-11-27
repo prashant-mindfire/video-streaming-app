@@ -29,6 +29,12 @@ const useConfirmDialog = <T,>({
     }
   };
 
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      close();
+    }
+  };
+
   const handleConfirm = async () => {
     if (!selectedItem || isLoading) return;
 
@@ -48,9 +54,9 @@ const useConfirmDialog = <T,>({
       confirmText={confirmText}
       cancelText={cancelText}
       variant={variant}
-      loading={isLoading}
+      isLoading={isLoading}
       onConfirm={handleConfirm}
-      onCancel={close}
+      onOpenChange={handleOpenChange}
       description={selectedItem !== null ? message(selectedItem) : ''}
     />
   );

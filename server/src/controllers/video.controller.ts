@@ -46,7 +46,7 @@ export const createPlaybackSession = async (req: Request<GetVideoParamsInput>, r
   const { videoId } = req.params;
   const session = await VideoService.createVideoPlaybackSession(videoId, req.auth!.userId);
 
-  responseHandler(res, 201, 'Video download URL generated successfully', {
+  responseHandler(res, 201, 'Playback session created successfully', {
     data: session,
   });
 };

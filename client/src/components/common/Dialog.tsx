@@ -1,73 +1,111 @@
-import { useEffect, type FC, type ReactNode } from 'react';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { Button } from './Button';
 
-export interface DialogProps {
+interface DialogProps {
   open: boolean;
-  onClose: () => void;
+  onOpenChange: (open: boolean) => void;
   title: string;
+  description?: string;
   children: ReactNode;
-  size?: 'sm' | 'md' | 'lg';
+  footer?: ReactNode;
+  contentClassName?: string;
+  showCloseButton?: boolean;
+  hideHeader?: boolean;
 }
 
-const sizes = {
-  sm: 'max-w-md',
-  md: 'max-w-xl',
-  lg: 'max-w-3xl',
-};
-
-const Dialog: FC<DialogProps> = ({ open, onClose, title, children, size = 'md' }: DialogProps) => {
-  useEffect(() => {
-    if (!open) return;
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    document.addEventListener('keydown', handleEscape);
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = '';
-    };
-  }, [open, onClose]);
-
-  if (!open) return null;
-
+export const Dialog = ({
+  open,
+  onOpenChange,
+  title,
+  description,
+  children,
+  footer,
+  contentClassName = '',
+  showCloseButton = true,
+  hideHeader,
+}: DialogProps) => {
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="modal-title"
-        className={`w-full ${sizes[size]} max-h-[90vh] overflow-y-auto rounded-xl bg-white shadow-xl`}
-      >
-        <div className="flex items-center justify-between border-b px-5 py-4">
-          <h2 id="modal-title" className="text-lg font-semibold text-gray-900">
-            {title}
-          </h2>
+    <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay
+          className="
+            fixed inset-0 z-50
+            bg-black/60
+            data-[state=open]:animate-in
+            data-[state=closed]:animate-out
+            data-[state=closed]:fade-out-0
+            data-[state=open]:fade-in-0
+          "
+        />
 
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close dialog"
-            className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100"
-          >
-            <X size={20} />
-          </button>
-        </div>
+        <DialogPrimitive.Content
+          aria-describedby={description ? undefined : undefined}
+          className={`
+            fixed left-1/2 top-1/2 z-50
+            w-[calc(100%-2rem)] max-w-lg
+            -translate-x-1/2 -translate-y-1/2
+            rounded-xl bg-white p-6 shadow-xl
+            outline-none
+            data-[state=open]:animate-in
+            data-[state=closed]:animate-out
+            data-[state=closed]:fade-out-0
+            data-[state=open]:fade-in-0
+            data-[state=closed]:zoom-out-95
+            data-[state=open]:zoom-in-95
+            ${hideHeader ? 'p-0' : 'p-6'}
+            ${contentClassName}
+          `}
+        >
+          {hideHeader ? (
+            <>
+              <DialogPrimitive.Title className="sr-only">{title}</DialogPrimitive.Title>
 
-        <div className="p-5">{children}</div>
-      </div>
-    </div>
+              {description && (
+                <DialogPrimitive.Description className="sr-only">
+                  {description}
+                </DialogPrimitive.Description>
+              )}
+            </>
+          ) : (
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <DialogPrimitive.Title className="text-lg font-semibold text-gray-900">
+                  {title}
+                </DialogPrimitive.Title>
+
+                {description && (
+                  <DialogPrimitive.Description className="mt-1 text-sm text-gray-600">
+                    {description}
+                  </DialogPrimitive.Description>
+                )}
+              </div>
+
+              {showCloseButton && (
+                <DialogPrimitive.Close asChild>
+                  <Button
+                    type="button"
+                    aria-label="Close dialog"
+                    className="
+                    rounded-md p-1 text-gray-600
+                    hover:bg-gray-100
+                    focus-visible:outline-none
+                    focus-visible:ring-2
+                    focus-visible:ring-blue-600
+                  "
+                  >
+                    <X size={20} aria-hidden="true" />
+                  </Button>
+                </DialogPrimitive.Close>
+              )}
+            </div>
+          )}
+          <div>{children}</div>
+
+          {footer && <div className="mt-6">{footer}</div>}
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   );
 };
-
-export default Dialog;
