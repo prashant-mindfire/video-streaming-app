@@ -36,8 +36,8 @@ jobs:
       - name: Build server
         run: npm run build
 
-      - name: Run server tests
-        run: npm test --if-present
+      - name: Run tests with coverage
+        run: npm run test:coverage --if-present
 
   client-ci:
     name: Client Lint, Build & Test
@@ -70,8 +70,8 @@ jobs:
           VITE_API_URL: http://localhost:5000
         run: npm run build
 
-      - name: Run client tests
-        run: npm test --if-present
+      - name: Run tests with coverage
+        run: npm run test:coverage --if-present
 
   docker-build:
     name: Build Production Docker Images
