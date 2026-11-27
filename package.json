@@ -26,6 +26,8 @@
   },
   "homepage": "https://github.com/prashant-mindfire/video-streaming-app#readme",
   "devDependencies": {
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
     "@playwright/test": "^1.65.1",
     "@types/node": "^26.6.11",
     "concurrently": "^10.0.7",
