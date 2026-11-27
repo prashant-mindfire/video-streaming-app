@@ -6,7 +6,7 @@ const Configuration: UserConfig = {
     'scope-enum': [
       1,
       'always',
-      ['client', 'server', 'worker', 'outbox', 'db', 'docker', 'ci', 'e2e', 'deps'],
+      ['client', 'server', 'worker', 'outbox', 'db', 'docker', 'ci', 'e2e', 'deps', 'doc'],
     ],
   },
 };
