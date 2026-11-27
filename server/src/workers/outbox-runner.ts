@@ -1,4 +1,5 @@
-import { connectRabbitMQ } from '@/config/rabbitmq';
+import { connectRabbitMQ, closeRabbitMQ } from '@/config/rabbitmq';
+import { closePool } from '@/config/db';
 import { publishOutboxEvents } from './outbox.worker';
 import logger from '@/utils/logger';
 
@@ -10,23 +11,26 @@ const start = async () => {
   logger.info('Outbox publisher started');
 
   let isShuttingDown = false;
+  let isProcessing = false;
   let timer: NodeJS.Timeout | null = null;
 
-  const scheduleNextRun = () => {
+  const runBatch = async () => {
     if (isShuttingDown) return;
 
-    timer = setTimeout(async () => {
-      try {
-        await publishOutboxEvents();
-      } catch (error) {
-        logger.error('Outbox publishing failed:', error);
-      } finally {
-        scheduleNextRun();
+    isProcessing = true;
+    try {
+      await publishOutboxEvents();
+    } catch (error) {
+      logger.error('Outbox publishing failed:', error);
+    } finally {
+      isProcessing = false;
+      if (!isShuttingDown) {
+        timer = setTimeout(runBatch, POLL_INTERVAL_MS);
       }
-    }, POLL_INTERVAL_MS);
+    }
   };
 
-  const shutdown = (signal: string) => {
+  const shutdown = async (signal: string) => {
     if (isShuttingDown) return;
     isShuttingDown = true;
 
@@ -34,23 +38,28 @@ const start = async () => {
     if (timer) {
       clearTimeout(timer);
     }
+
+    // Wait for any in-flight DB transaction + RabbitMQ publish to finish
+    while (isProcessing) {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+
+    await closeRabbitMQ();
+    await closePool();
+
+    logger.info('Outbox runner shutdown complete');
     process.exit(0);
   };
 
-  process.on('SIGINT', () => shutdown('SIGINT'));
-  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.once('SIGINT', () => shutdown('SIGINT'));
+  process.once('SIGTERM', () => shutdown('SIGTERM'));
 
-  // Run immediately on startup, then schedule the next run only after completion
-  try {
-    await publishOutboxEvents();
-  } catch (error) {
-    logger.error('Outbox publishing failed:', error);
-  } finally {
-    scheduleNextRun();
-  }
+  await runBatch();
 };
 
-start().catch((error) => {
+start().catch(async (error) => {
   logger.error('Something went wrong in start outbox runner:', error);
+  await closeRabbitMQ();
+  await closePool();
   process.exit(1);
 });
