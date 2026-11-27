@@ -156,6 +156,19 @@ export const downloadVideo = async (objectKey: string, fileName: string): Promis
   return downloadUrl;
 };
 
+export const getPresignedObjectUrl = async (objectKey: string): Promise<string> => {
+  const command = new GetObjectCommand({
+    Bucket: RUSTFS_BUCKET_NAME,
+    Key: objectKey,
+  });
+
+  const presignedUrl = await getSignedUrl(s3PresignClient, command, {
+    expiresIn: URL_EXPIRY_SECONDS,
+  });
+
+  return presignedUrl;
+};
+
 export const sanitizeFileName = (fileName: string) =>
   fileName
     .replace(/[/\\]/g, '_')

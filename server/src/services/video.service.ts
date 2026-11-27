@@ -1,9 +1,14 @@
 import * as VideoRepository from '@/repositories/video.repository';
+import * as VideoCaptionRepository from '@/repositories/VideoCaption.repository';
 import { AppError } from '@/utils/app.error';
-import { deleteVideoObjects, downloadVideo } from '@/utils/multipart-upload';
+import { deleteVideoObjects, downloadVideo, getPresignedObjectUrl } from '@/utils/multipart-upload';
 import { getVideoProgress } from './video-progress.service';
 import { URL_EXPIRY_SECONDS } from '@/utils/constants';
-import { createPlaybackAccess, type PlaybackAccessResponse } from './playback-access.service';
+import {
+  createPlaybackAccess,
+  type PlaybackAccessResponse,
+  type PlaybackCaption,
+} from './playback-access.service';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { RUSTFS_BUCKET_NAME, s3PresignClient } from '@/config/rustfs';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -172,14 +177,33 @@ export const createVideoPlaybackSession = async (
   }
 
   if (video.status !== 'ready' || !video.hls_master_playlist_key) {
-    throw new Error('Video is not ready for playback');
+    throw new AppError('Video is not ready for playback', 409);
   }
 
-  return await createPlaybackAccess({
+  const playbackAccess = await createPlaybackAccess({
     videoId,
     userId,
     masterPlaylistKey: video.hls_master_playlist_key,
   });
+
+  //TODO: Video Captions
+  // const captionRecords = await VideoCaptionRepository.findByVideoId(videoId);
+
+  // Generate a presigned URL for each caption file stored in RustFS.
+  // const captions = await Promise.all(
+  //   captionRecords.map(async (caption) => ({
+  //     id: caption.id,
+  //     languageCode: caption.language_code,
+  //     label: caption.label,
+  //     url: await getPresignedObjectUrl(caption.object_key),
+  //     isDefault: caption.is_default,
+  //   })),
+  // );
+
+  return {
+    ...playbackAccess,
+    // captions,
+  };
 };
 
 export const getVideoDownloadLink = async (videoId: string, userId: string) => {
